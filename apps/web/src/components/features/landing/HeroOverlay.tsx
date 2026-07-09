@@ -1,82 +1,126 @@
 'use client';
 
+import { useMemo } from 'react';
+
 interface HeroOverlayProps {
-  progress: number; // 0-1 from ScrollAnimation
+  /** Animation progress 0-1 */
+  progress: number;
+  /** Whether the animation has completed and zoom/release happened */
+  animationComplete: boolean;
 }
 
-export default function HeroOverlay({ progress }: HeroOverlayProps) {
-  // Text becomes visible when ink background is dark enough (~25% progress)
-  const textVisible = progress > 0.2;
-  // Staggered delays for each element
-  const fadeBase = textVisible ? 1 : 0;
+export default function HeroOverlay({ progress, animationComplete }: HeroOverlayProps) {
+  // Text appears when ink is dark enough for contrast (~55% progress)
+  const show = progress > 0.55;
 
-  // Fade out text near the end of animation (~85%)
-  const fadeOut = progress > 0.85 ? Math.max(0, 1 - (progress - 0.85) / 0.15) : 1;
-  const opacity = fadeBase * fadeOut;
+  // Staggered fade values — 30-50ms feel between elements (mapped to progress %)
+  const fade = useMemo(() => {
+    if (!show) return { title: 0, subtitle: 0, tagline: 0, cta: 0 };
+    const p = Math.min(1, (progress - 0.55) / 0.2);
+    return {
+      title: Math.min(1, p / 0.25),
+      subtitle: Math.min(1, Math.max(0, (p - 0.2) / 0.25)),
+      tagline: Math.min(1, Math.max(0, (p - 0.4) / 0.25)),
+      cta: Math.min(1, Math.max(0, (p - 0.6) / 0.25)),
+    };
+  }, [show, progress]);
+
+  // Hide during released phase
+  if (animationComplete) return null;
 
   return (
     <div
-      className="fixed inset-0 z-10 pointer-events-none flex items-center"
-      style={{ opacity }}
+      className="fixed inset-0 z-40 pointer-events-none flex items-center"
+      style={{ opacity: show ? 1 : 0 }}
     >
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full">
-        <div className="max-w-xl pointer-events-auto">
-          {/* Main Heading */}
-          <h1
-            className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white leading-[1.1] mb-4 drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
-            style={{
-              fontFamily: 'var(--font-heading)',
-              transform: `translateY(${textVisible ? 0 : 20}px)`,
-              opacity: textVisible ? 1 : 0,
-              transition: 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s ease-out',
-            }}
-          >
-            Hisab Kitab
-          </h1>
+      <div className="w-[45%] pl-[8%] flex flex-col" style={{ gap: '1.2rem' }}>
+        {/* Title — editorial serif, confident sizing */}
+        <h1
+          style={{
+            fontFamily: 'var(--font-playfair), Georgia, serif',
+            fontSize: 'clamp(44px, 5vw, 76px)',
+            fontWeight: 600,
+            lineHeight: 1.02,
+            letterSpacing: '-0.03em',
+            color: '#fff',
+            opacity: fade.title,
+            transform: `translateY(${(1 - fade.title) * 14}px)`,
+            textWrap: 'balance' as unknown as string,
+          }}
+        >
+          Hisab Kitab
+        </h1>
 
-          {/* Subtitle */}
-          <p
-            className="text-base sm:text-lg font-semibold text-white/80 uppercase tracking-[0.2em] mb-2"
-            style={{
-              transform: `translateY(${textVisible ? 0 : 20}px)`,
-              opacity: textVisible ? 1 : 0,
-              transition: 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s, opacity 0.6s ease-out 0.1s',
-            }}
-          >
-            Digital Ledger App
-          </p>
+        {/* Subtitle — quiet, spaced, caps */}
+        <p
+          style={{
+            fontFamily: 'var(--font-inter), system-ui, sans-serif',
+            fontSize: 'clamp(11px, 1vw, 14px)',
+            fontWeight: 500,
+            textTransform: 'uppercase' as const,
+            letterSpacing: '0.18em',
+            color: 'rgba(255,255,255,0.55)',
+            opacity: fade.subtitle,
+            transform: `translateY(${(1 - fade.subtitle) * 10}px)`,
+          }}
+        >
+          Digital Ledger App
+        </p>
 
-          {/* Tagline */}
-          <p
-            className="text-xl sm:text-2xl lg:text-3xl font-medium text-white/70 mb-8"
-            style={{
-              fontFamily: 'var(--font-heading)',
-              transform: `translateY(${textVisible ? 0 : 20}px)`,
-              opacity: textVisible ? 1 : 0,
-              transition: 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s, opacity 0.6s ease-out 0.2s',
-            }}
-          >
-            Simplify Your Finances.
-            <br />
-            Track. Manage. Grow.
-          </p>
+        {/* Tagline — warm, human, conversational */}
+        <p
+          style={{
+            fontFamily: 'var(--font-inter), system-ui, sans-serif',
+            fontSize: 'clamp(14px, 1.05vw, 17px)',
+            fontWeight: 400,
+            lineHeight: 1.65,
+            color: 'rgba(255,255,255,0.72)',
+            opacity: fade.tagline,
+            transform: `translateY(${(1 - fade.tagline) * 10}px)`,
+            maxWidth: '340px',
+          }}
+        >
+          Simplify your finances.
+          <br />
+          Track. Manage. Grow.
+        </p>
 
-          {/* CTA Button */}
-          <a
-            href="#get-started"
-            className="inline-block px-8 py-4 bg-[#e8e0d0] text-[#1a1a1a] text-sm font-bold uppercase tracking-wider rounded-full
-              hover:bg-white hover:scale-105 hover:shadow-[0_0_30px_rgba(232,224,208,0.3)]
-              active:scale-[0.98]
-              transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-              pointer-events-auto"
+        {/* CTA — pill, cream on dark ink, hover lifts subtly */}
+        <div
+          style={{
+            opacity: fade.cta,
+            transform: `translateY(${(1 - fade.cta) * 10}px)`,
+            marginTop: '0.6rem',
+          }}
+        >
+          <button
+            className="pointer-events-auto"
             style={{
-              transform: `translateY(${textVisible ? 0 : 20}px)`,
-              opacity: textVisible ? 1 : 0,
-              transition: 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, opacity 0.6s ease-out 0.3s, background-color 0.3s, box-shadow 0.3s, scale 0.2s',
+              fontFamily: 'var(--font-inter), system-ui, sans-serif',
+              fontSize: '13px',
+              fontWeight: 600,
+              textTransform: 'uppercase' as const,
+              letterSpacing: '0.08em',
+              padding: '14px 32px',
+              borderRadius: '100px',
+              border: 'none',
+              background: '#f5f0e6',
+              color: '#1a1a1a',
+              cursor: 'pointer',
+              boxShadow: '0 2px 20px rgba(0,0,0,0.12)',
+              transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 28px rgba(0,0,0,0.18)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 20px rgba(0,0,0,0.12)';
             }}
           >
-            Start Your Free Trial
-          </a>
+            Start free trial
+          </button>
         </div>
       </div>
     </div>

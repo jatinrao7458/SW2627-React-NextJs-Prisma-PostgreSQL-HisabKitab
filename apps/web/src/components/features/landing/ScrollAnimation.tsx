@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 interface ScrollAnimationProps {
-  frameCount: number;
+  startFrame: number;
+  endFrame: number;
   basePath: string;
   prefix: string;
   format: string;
@@ -11,16 +12,19 @@ interface ScrollAnimationProps {
   bufferAhead?: number;
   bufferBehind?: number;
   lerpFactor?: number;
-  /** Pixels of wheel-delta to traverse all frames */
   totalWheelTravel?: number;
-  /** Called on every frame update with progress 0-1 */
+  /** Extra wheel travel for zoom-out after last frame */
+  zoomWheelTravel?: number;
+  /** Target scale at full zoom-out (0.65 = 65% of viewport) */
+  zoomTargetScale?: number;
   onProgress?: (progress: number) => void;
-  /** Called once when animation reaches the last frame */
   onComplete?: () => void;
+  stickyAfterComplete?: boolean;
 }
 
 export default function ScrollAnimation({
-  frameCount,
+  startFrame,
+  endFrame,
   basePath,
   prefix,
   format,
@@ -28,25 +32,37 @@ export default function ScrollAnimation({
   bufferAhead = 40,
   bufferBehind = 20,
   lerpFactor = 0.1,
-  totalWheelTravel = 4000,
+  totalWheelTravel = 5000,
+  zoomWheelTravel = 250,
+  zoomTargetScale = 0.95,
   onProgress,
   onComplete,
+  stickyAfterComplete = false,
 }: ScrollAnimationProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
+  const [phase, setPhase] = useState<'locked' | 'zooming' | 'released'>('locked');
 
-  // Single mutable state ref to avoid dependency loops
+  const cbRef = useRef({ onProgress, onComplete });
+  cbRef.current = { onProgress, onComplete };
+
+  const totalFrames = endFrame - startFrame;
+
   const engine = useRef({
     cache: new Map<number, HTMLImageElement>(),
     loading: new Set<number>(),
-    currentFrame: 1,
-    targetFrame: 1,
+    currentFrame: startFrame,
+    targetFrame: startFrame,
     lastDrawn: -1,
     rafId: 0,
     wheelAccum: 0,
+    zoomAccum: 0,       // separate accumulator for zoom phase
     completed: false,
     locked: true,
+    zooming: false,
+    lastReportedProgress: -1,
+    lastReportTime: 0,
   });
 
   const getFrameUrl = useCallback(
@@ -54,71 +70,89 @@ export default function ScrollAnimation({
     [basePath, prefix, padDigits, format]
   );
 
-  // Draw frame to canvas with object-fit:cover
-  function drawFrame(index: number) {
+  // Apply zoom transform directly to the container (no React re-render)
+  const applyZoom = useCallback((zoomProgress: number) => {
+    const container = containerRef.current;
+    if (!container) return;
+    const scale = 1 - zoomProgress * (1 - zoomTargetScale);
+    const radius = zoomProgress * 24; // max 24px border radius
+    container.style.transform = `scale(${scale})`;
+    container.style.borderRadius = `${radius}px`;
+    container.style.overflow = 'hidden';
+  }, [zoomTargetScale]);
+
+  const resetZoom = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    container.style.transform = '';
+    container.style.borderRadius = '';
+    container.style.overflow = '';
+  }, []);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const img = engine.current.cache.get(index);
-    if (!img) return;
-
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    if (canvas.width !== w || canvas.height !== h) {
-      canvas.width = w;
-      canvas.height = h;
-    }
-
-    // object-fit: cover math
-    const iw = img.naturalWidth, ih = img.naturalHeight;
-    const ir = iw / ih, cr = w / h;
-    let sx = 0, sy = 0, sw = iw, sh = ih;
-    if (ir > cr) { sw = ih * cr; sx = (iw - sw) / 2; }
-    else { sh = iw / cr; sy = (ih - sh) / 2; }
-
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
-    engine.current.lastDrawn = index;
-  }
-
-  // Preload sliding window
-  function preloadAround(center: number) {
-    const e = engine.current;
-    const lo = Math.max(1, center - bufferBehind);
-    const hi = Math.min(frameCount, center + bufferAhead);
-    for (let i = lo; i <= hi; i++) {
-      if (!e.cache.has(i) && !e.loading.has(i)) {
-        e.loading.add(i);
-        const img = new Image();
-        img.onload = () => { e.cache.set(i, img); e.loading.delete(i); };
-        img.onerror = () => e.loading.delete(i);
-        img.src = getFrameUrl(i);
-      }
-    }
-    // GC distant frames
-    for (const k of e.cache.keys()) {
-      if (k < center - bufferBehind * 3 || k > center + bufferAhead * 3) {
-        e.cache.delete(k);
-      }
-    }
-  }
-
-  useEffect(() => {
     const e = engine.current;
 
-    // Lock body scroll
+    function drawFrame(index: number) {
+      const img = e.cache.get(index);
+      if (!img || !canvas) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const w = Math.round(rect.width * dpr);
+      const h = Math.round(rect.height * dpr);
+
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+      }
+
+      const iw = img.naturalWidth, ih = img.naturalHeight;
+      const ir = iw / ih, cr = w / h;
+      let sx = 0, sy = 0, sw = iw, sh = ih;
+      if (ir > cr) { sw = ih * cr; sx = (iw - sw) / 2; }
+      else { sh = iw / cr; sy = (ih - sh) / 2; }
+
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+      e.lastDrawn = index;
+    }
+
+    function preloadAround(center: number) {
+      const lo = Math.max(startFrame, center - bufferBehind);
+      const hi = Math.min(endFrame, center + bufferAhead);
+      for (let i = lo; i <= hi; i++) {
+        if (!e.cache.has(i) && !e.loading.has(i)) {
+          e.loading.add(i);
+          const img = new Image();
+          img.onload = () => { e.cache.set(i, img); e.loading.delete(i); };
+          img.onerror = () => e.loading.delete(i);
+          img.src = getFrameUrl(i);
+        }
+      }
+      for (const k of e.cache.keys()) {
+        if (k < center - bufferBehind * 4 || k > center + bufferAhead * 4) {
+          e.cache.delete(k);
+        }
+      }
+    }
+
+    // Lock scroll
+    document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
     e.locked = true;
 
     // Load first frame
     const img1 = new Image();
     img1.onload = () => {
-      e.cache.set(1, img1);
-      drawFrame(1);
+      e.cache.set(startFrame, img1);
+      drawFrame(startFrame);
       setReady(true);
-      preloadAround(1);
+      preloadAround(startFrame);
     };
-    img1.src = getFrameUrl(1);
+    img1.src = getFrameUrl(startFrame);
 
     // Render loop
     function tick() {
@@ -129,84 +163,171 @@ export default function ScrollAnimation({
         e.currentFrame = e.targetFrame;
       }
 
-      const idx = Math.max(1, Math.min(frameCount, Math.round(e.currentFrame)));
+      const idx = Math.max(startFrame, Math.min(endFrame, Math.round(e.currentFrame)));
       if (idx !== e.lastDrawn) {
         drawFrame(idx);
       }
 
-      // Report progress
-      const progress = (idx - 1) / (frameCount - 1);
-      onProgress?.(progress);
+      // Throttled progress
+      const progress = (idx - startFrame) / totalFrames;
+      const now = performance.now();
+      if (Math.abs(progress - e.lastReportedProgress) > 0.005 && now - e.lastReportTime > 66) {
+        e.lastReportedProgress = progress;
+        e.lastReportTime = now;
+        cbRef.current.onProgress?.(progress);
+      }
 
-      // Check completion
-      if (idx >= frameCount && !e.completed) {
-        e.completed = true;
-        // Unlock body scroll
-        document.body.style.overflow = '';
-        e.locked = false;
-        onComplete?.();
+      // Frame animation complete → enter zoom phase
+      if (idx >= endFrame && !e.completed && !e.zooming) {
+        e.zooming = true;
+        setPhase('zooming');
       }
 
       e.rafId = requestAnimationFrame(tick);
     }
     e.rafId = requestAnimationFrame(tick);
 
-    // Wheel handler — drives the animation instead of native scroll
+    // --- Wheel handler: 3 phases ---
     function onWheel(ev: WheelEvent) {
-      if (!e.locked) return; // after completion, let native scroll work
+      const delta = Math.abs(ev.deltaY) > 100 ? ev.deltaY * 0.3 : ev.deltaY;
 
-      ev.preventDefault(); // block native scroll
+      // Phase 1: LOCKED — wheel drives frame animation
+      if (e.locked && !e.zooming) {
+        ev.preventDefault();
+        ev.stopPropagation();
 
-      // Accumulate wheel delta
-      e.wheelAccum += ev.deltaY;
+        e.wheelAccum = Math.max(0, Math.min(totalWheelTravel, e.wheelAccum + delta));
+        const progress = e.wheelAccum / totalWheelTravel;
+        e.targetFrame = startFrame + progress * totalFrames;
 
-      // Clamp to valid range
-      e.wheelAccum = Math.max(0, Math.min(totalWheelTravel, e.wheelAccum));
-
-      // Map accumulated delta → frame index (1-based)
-      const progress = e.wheelAccum / totalWheelTravel;
-      e.targetFrame = 1 + progress * (frameCount - 1);
-
-      // Handle reverse scroll: if scrolling back to start, re-lock if needed
-      if (e.completed && progress < 0.98) {
-        e.completed = false;
-        document.body.style.overflow = 'hidden';
-        e.locked = true;
+        preloadAround(Math.round(e.targetFrame));
+        return;
       }
 
-      preloadAround(Math.round(e.targetFrame));
+      // Phase 2: ZOOMING — wheel drives the zoom-out scale
+      if (e.zooming && !e.completed) {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        e.zoomAccum = Math.max(0, Math.min(zoomWheelTravel, e.zoomAccum + delta));
+        const zoomProgress = e.zoomAccum / zoomWheelTravel;
+
+        applyZoom(zoomProgress);
+
+        // Scrolling back during zoom → un-zoom
+        if (e.zoomAccum <= 0) {
+          e.zooming = false;
+          setPhase('locked');
+          resetZoom();
+          // Allow frame animation to reverse
+          e.wheelAccum = totalWheelTravel + delta;
+          e.wheelAccum = Math.max(0, Math.min(totalWheelTravel, e.wheelAccum));
+          const progress = e.wheelAccum / totalWheelTravel;
+          e.targetFrame = startFrame + progress * totalFrames;
+          return;
+        }
+
+        // Zoom complete → release
+        if (zoomProgress >= 1) {
+          e.completed = true;
+          e.locked = false;
+          document.documentElement.style.overflow = '';
+          document.body.style.overflow = '';
+          cbRef.current.onProgress?.(1);
+          cbRef.current.onComplete?.();
+
+          if (stickyAfterComplete) {
+            setPhase('released');
+          }
+        }
+        return;
+      }
+
+      // Phase 3: RELEASED — scrolling up at top re-engages
+      if (e.completed && ev.deltaY < 0 && window.scrollY <= 0) {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        // Re-lock
+        e.completed = false;
+        e.zooming = true;
+        e.locked = true;
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+        window.scrollTo(0, 0);
+
+        setPhase('zooming');
+
+        // Start from full zoom, scroll back
+        e.zoomAccum = zoomWheelTravel;
+        e.wheelAccum = totalWheelTravel;
+        e.zoomAccum = Math.max(0, e.zoomAccum + delta);
+
+        const zoomProgress = e.zoomAccum / zoomWheelTravel;
+        applyZoom(zoomProgress);
+      }
+    }
+
+    function onScroll() {
+      if (e.locked) window.scrollTo(0, 0);
+    }
+    function onTouchMove(ev: TouchEvent) {
+      if (e.locked) ev.preventDefault();
+    }
+    function onResize() {
+      e.lastDrawn = -1;
     }
 
     window.addEventListener('wheel', onWheel, { passive: false });
-
-    // Resize handler
-    function onResize() { e.lastDrawn = -1; }
+    window.addEventListener('scroll', onScroll, { passive: false });
+    window.addEventListener('touchmove', onTouchMove, { passive: false });
     window.addEventListener('resize', onResize);
 
     return () => {
       cancelAnimationFrame(e.rafId);
       window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('resize', onResize);
-      // Restore scroll on unmount
+      document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /*
+   * Three layout phases:
+   * - "locked":    fixed fullscreen, wheel drives frame animation
+   * - "zooming":   fixed fullscreen, wheel drives scale transform (zoom-out)
+   * - "released":  normal document flow, canvas scrolls away
+   */
+  const isReleased = phase === 'released';
+
   return (
-    <div ref={containerRef} className="fixed inset-0 z-0">
-      {/* Loading state */}
+    <div
+      ref={containerRef}
+      className={
+        isReleased
+          ? 'relative w-full z-0'
+          : 'fixed inset-0 z-30'
+      }
+      style={{
+        ...(isReleased ? { height: '100vh' } : {}),
+        transformOrigin: 'center center',
+        willChange: phase === 'zooming' ? 'transform, border-radius' : 'auto',
+      }}
+    >
+      {/* Loading shimmer */}
       {!ready && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#e8e0d0] z-10">
-          <div className="w-12 h-12 rounded-full border-3 border-[#3a3a3a]/20 border-t-[#3a3a3a] animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center bg-[#C8C2A2] z-10">
+          <div className="w-10 h-10 rounded-full border-[3px] border-[#3a3a3a]/20 border-t-[#3a3a3a] animate-spin" />
         </div>
       )}
 
       <canvas
         ref={canvasRef}
-        className={`block w-full h-full transition-opacity duration-700 ${
-          ready ? 'opacity-100' : 'opacity-0'
-        }`}
+        style={{ display: 'block', width: '100%', height: '100%' }}
+        className={`transition-opacity duration-700 ${ready ? 'opacity-100' : 'opacity-0'}`}
       />
     </div>
   );

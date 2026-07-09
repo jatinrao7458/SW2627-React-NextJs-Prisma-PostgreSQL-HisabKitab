@@ -2,64 +2,61 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-const features = [
+const FEATURES = [
   {
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.64 0 8.577 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.64 0-8.577-3.007-9.963-7.178Z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="8" y="6" width="24" height="28" rx="2" />
+        <line x1="14" y1="14" x2="26" y2="14" />
+        <line x1="14" y1="19" x2="23" y2="19" />
+        <line x1="14" y1="24" x2="20" y2="24" />
       </svg>
     ),
-    title: 'Real-Time Tracking',
-    description: 'See balances update instantly across all devices. No refresh needed.',
+    title: 'Smart Billing',
+    description: 'Create invoices, track payments, send receipts — all with a single tap. No complexity, just clarity.',
   },
   {
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="16" cy="15" r="5" />
+        <path d="M6 32c0-5.523 4.477-10 10-10s10 4.477 10 32" />
+        <circle cx="28" cy="14" r="3.5" />
+        <path d="M30 22c2.761 0 5 2.239 5 5v5" />
       </svg>
     ),
-    title: 'Bank-Grade Security',
-    description: 'Complete audit trail on every transaction. Your data is always protected.',
+    title: 'Staff Dashboard',
+    description: 'Your team at a glance. Attendance, payouts, performance — all in one calm, focused view.',
   },
   {
     icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="5" y="8" width="30" height="24" rx="2" />
+        <polyline points="10 28 16 20 22 24 28 14" />
       </svg>
     ),
-    title: 'Smart Analytics',
-    description: 'Daily and monthly earnings, top contacts, expense trends — all at a glance.',
-  },
-  {
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-7 h-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-      </svg>
-    ),
-    title: 'PDF & Reports',
-    description: 'Generate per-contact ledgers and all-dues summaries in one click.',
+    title: 'Easy Management',
+    description: 'Instant quotes, clean reports, real-time numbers. Spend less time managing, more time growing.',
   },
 ];
 
 export default function FeaturesSection() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true);
+          setVisible(true);
+          observer.disconnect();
         }
       },
-      { threshold: 0.15 }
+      { threshold: 0.12 }
     );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
+    observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
@@ -67,78 +64,131 @@ export default function FeaturesSection() {
     <section
       ref={sectionRef}
       id="features"
-      className="relative bg-[#0f1419] py-24 sm:py-32 overflow-hidden"
+      style={{
+        padding: '100px 40px 120px',
+        fontFamily: 'var(--font-inter), system-ui, sans-serif',
+      }}
     >
-      {/* Subtle grid background */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
-        }}
-      />
-
-      <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
-        {/* Section Header */}
+      <div style={{ maxWidth: '960px', margin: '0 auto' }}>
+        {/* Section Heading — editorial, asymmetric */}
         <div
-          className={`mb-16 lg:mb-20 transition-all duration-1000 ${
-            isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-          }`}
+          style={{
+            marginBottom: '72px',
+            opacity: visible ? 1 : 0,
+            transform: visible ? 'translateY(0)' : 'translateY(24px)',
+            transition: 'opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+          }}
         >
           <h2
-            className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6"
-            style={{ fontFamily: 'var(--font-heading)' }}
+            style={{
+              fontFamily: 'var(--font-playfair), Georgia, serif',
+              fontSize: 'clamp(28px, 3.5vw, 44px)',
+              fontWeight: 600,
+              color: '#1a1a1a',
+              lineHeight: 1.15,
+              letterSpacing: '-0.025em',
+              marginBottom: '20px',
+            }}
           >
             Modern. Secure.
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300">Efficient.</span>
+            Efficient.
           </h2>
-          <p className="text-lg text-white/50 max-w-2xl">
-            Effortlessly track income, manage expenses, and generate reports on
-            the go. Built for shopkeepers who demand reliability and speed.
+          <p
+            style={{
+              fontSize: '15px',
+              lineHeight: 1.7,
+              color: '#6b6b6b',
+              maxWidth: '420px',
+            }}
+          >
+            A complete digital ledger designed for Indian shopkeepers — manage
+            transactions, track payments, and stay in control from anywhere.
           </p>
         </div>
 
-        {/* Feature Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {features.map((feature, index) => (
-            <div
+        {/* Feature Cards — clean grid, staggered 50ms reveals */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '48px',
+          }}
+        >
+          {FEATURES.map((feature, i) => (
+            <FeatureCard
               key={feature.title}
-              className={`group relative p-6 rounded-2xl border border-white/[0.06]
-                bg-white/[0.03] backdrop-blur-sm
-                hover:border-emerald-500/30 hover:shadow-[0_0_30px_rgba(16,185,129,0.1)]
-                hover:-translate-y-1
-                transition-all duration-500
-                ${
-                  isVisible
-                    ? 'opacity-100 translate-y-0'
-                    : 'opacity-0 translate-y-12'
-                }`}
-              style={{
-                transitionDelay: `${200 + index * 80}ms`,
-                transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
-              }}
-            >
-              {/* Icon */}
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4
-                group-hover:bg-emerald-500/20 group-hover:scale-110 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]">
-                {feature.icon}
-              </div>
-
-              {/* Title */}
-              <h3 className="text-lg font-semibold text-white mb-2">
-                {feature.title}
-              </h3>
-
-              {/* Description */}
-              <p className="text-sm text-white/50 leading-relaxed">
-                {feature.description}
-              </p>
-            </div>
+              feature={feature}
+              visible={visible}
+              delay={i * 80}
+            />
           ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function FeatureCard({
+  feature,
+  visible,
+  delay,
+}: {
+  feature: (typeof FEATURES)[number];
+  visible: boolean;
+  delay: number;
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'translateY(0)' : 'translateY(20px)',
+        transition: `opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms`,
+        cursor: 'default',
+        padding: '8px 0',
+      }}
+    >
+      {/* Icon */}
+      <div
+        style={{
+          color: hovered ? '#1a1a1a' : '#888',
+          marginBottom: '20px',
+          transition: 'color 0.3s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          transform: hovered ? 'scale(1.08)' : 'scale(1)',
+        }}
+      >
+        {feature.icon}
+      </div>
+
+      {/* Title */}
+      <h3
+        style={{
+          fontSize: '16px',
+          fontWeight: 600,
+          color: '#1a1a1a',
+          marginBottom: '10px',
+          letterSpacing: '-0.01em',
+        }}
+      >
+        {feature.title}
+      </h3>
+
+      {/* Description */}
+      <p
+        style={{
+          fontSize: '14px',
+          lineHeight: 1.65,
+          color: '#888',
+          transition: 'color 0.3s ease',
+          ...(hovered ? { color: '#6b6b6b' } : {}),
+        }}
+      >
+        {feature.description}
+      </p>
+    </div>
   );
 }
