@@ -1,0 +1,63 @@
+'use client';
+
+import { useState, useCallback } from 'react';
+import Navbar from '@/components/features/landing/Navbar';
+import ScrollAnimation from '@/components/features/landing/ScrollAnimation';
+import HeroOverlay from '@/components/features/landing/HeroOverlay';
+import FeaturesSection from '@/components/features/landing/FeaturesSection';
+import Footer from '@/components/features/landing/Footer';
+
+// Frame manifest — extracted from reference/0709.mp4
+// Frames 1-4 are a pre-roll title card, frames 191+ fade to black
+const ANIMATION_CONFIG = {
+  startFrame: 5,       // blank paper — skip pre-roll
+  endFrame: 190,       // full dashboard — skip black fade
+  basePath: '/animation/frames/',
+  prefix: 'frame_',
+  format: 'webp',
+};
+
+export default function LandingPage() {
+  const [progress, setProgress] = useState(0);
+  const [animationComplete, setAnimationComplete] = useState(false);
+
+  const handleProgress = useCallback((p: number) => {
+    setProgress(p);
+  }, []);
+
+  const handleComplete = useCallback(() => {
+    setAnimationComplete(true);
+  }, []);
+
+  return (
+    <main className="bg-[#C8C2A2]" style={{ minHeight: '300vh' }}>
+      {/* ===== Navbar — hidden during scroll-lock, fades in on completion ===== */}
+      <Navbar visible={animationComplete} />
+
+      {/* ===== Scroll-driven ink animation ===== */}
+      <ScrollAnimation
+        startFrame={ANIMATION_CONFIG.startFrame}
+        endFrame={ANIMATION_CONFIG.endFrame}
+        basePath={ANIMATION_CONFIG.basePath}
+        prefix={ANIMATION_CONFIG.prefix}
+        format={ANIMATION_CONFIG.format}
+        totalWheelTravel={5000}
+        bufferAhead={40}
+        bufferBehind={20}
+        lerpFactor={0.1}
+        onProgress={handleProgress}
+        onComplete={handleComplete}
+        stickyAfterComplete
+      />
+
+      {/* ===== Hero Text — fades in at ~55% progress over the dark ink ===== */}
+      <HeroOverlay progress={progress} animationComplete={animationComplete} />
+
+      {/* ===== Features Section — below the animation card ===== */}
+      <FeaturesSection />
+
+      {/* ===== Footer ===== */}
+      <Footer />
+    </main>
+  );
+}
