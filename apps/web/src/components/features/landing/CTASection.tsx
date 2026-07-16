@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 
 export default function CTASection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -139,7 +140,7 @@ export default function CTASection() {
               transition: 'opacity 0.7s ease 0.45s, transform 0.7s ease 0.45s',
             }}
           >
-            <a
+            <Link
               href="/register"
               style={{
                 fontSize: '14px',
@@ -164,7 +165,7 @@ export default function CTASection() {
               }}
             >
               Get started free
-            </a>
+            </Link>
             <a
               href="#demo"
               style={{

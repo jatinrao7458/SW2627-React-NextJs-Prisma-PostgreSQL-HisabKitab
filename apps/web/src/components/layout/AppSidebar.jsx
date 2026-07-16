@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
 import {
   LayoutDashboard,
   Users,
@@ -16,7 +14,7 @@ import styles from "./AppSidebar.module.css";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Contacts", href: "/contacts", icon: Users },
+  { name: "Workers", href: "/workers", icon: Users },
   { name: "Transactions", href: "/transactions", icon: ArrowRightLeft },
   { name: "Inventory", href: "/inventory", icon: Package },
 ];

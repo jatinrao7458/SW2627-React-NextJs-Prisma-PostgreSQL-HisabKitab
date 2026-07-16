@@ -21,7 +21,7 @@ const VALUE_PROPS = [
     accent: '#10B981',
     title: 'Built for Indian Shopkeepers',
     description:
-      'Hindi/English toggle, ₹ currency, contact-based ledger model matching how khata works in real life. PWA that works even on patchy networks.',
+      'Hindi/English toggle, ₹ currency, worker-based ledger model matching how khata works in real life. PWA that works even on patchy networks.',
     icon: (
       <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="16" cy="16" r="12" />
