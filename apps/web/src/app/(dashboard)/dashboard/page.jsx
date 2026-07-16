@@ -25,7 +25,7 @@ const itemVariants = {
 };
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function DashboardPage() {
   }
 
   const kpiData = [
-    { label: "Total Dues", value: "0.00", color: "#10B981", sub: "Receivable from 0 contacts" },
+    { label: "Total Dues", value: "0.00", color: "#10B981", sub: "Receivable from 0 workers" },
     { label: "Total Payable", value: "0.00", color: "#EF4444", sub: "Owed to 0 vendors" },
     { label: "Salary Payable", value: "0.00", color: "#3B82F6", sub: "For 0 workers" },
     { label: "Monthly Loss", value: "0.00", color: "#D97706", sub: "Expiries & damages" },
@@ -88,7 +88,7 @@ export default function DashboardPage() {
         </div>
         <h3 className={styles.emptyTitle}>Your digital khatabook is empty</h3>
         <p className={styles.emptyDesc}>
-          Get started by adding your first customer contact or importing your existing paper ledgers using our AI vision tool.
+          Get started by adding your first worker or importing your existing paper ledgers using our AI vision tool.
         </p>
         <div className={styles.actionGroup}>
           <motion.button
@@ -96,7 +96,7 @@ export default function DashboardPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
           >
-            Add First Contact
+            Add First Worker
           </motion.button>
           <motion.button
             className={styles.secondaryBtn}

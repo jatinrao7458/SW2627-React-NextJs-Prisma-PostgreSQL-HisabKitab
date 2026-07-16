@@ -48,7 +48,9 @@ export default function ScrollAnimation({
   const [phase, setPhase] = useState<'locked' | 'zooming' | 'released'>('locked');
 
   const cbRef = useRef({ onProgress, onComplete, onReEngage });
-  cbRef.current = { onProgress, onComplete, onReEngage };
+  useEffect(() => {
+    cbRef.current = { onProgress, onComplete, onReEngage };
+  }, [onProgress, onComplete, onReEngage]);
 
   const totalFrames = endFrame - startFrame;
 

@@ -3,17 +3,10 @@
 import { useSession, signOut } from "next-auth/react";
 import { Search } from "lucide-react";
 import styles from "./AppHeader.module.css";
-import { useEffect, useState } from "react";
 
 export default function AppHeader() {
   const { data: session } = useSession();
-  const [shopName, setShopName] = useState("Your Khata");
-
-  useEffect(() => {
-    if (session?.user?.name) {
-      setShopName(session.user.name + "'s Khata");
-    }
-  }, [session]);
+  const shopName = session?.user?.name ? `${session.user.name}'s Khata` : "Your Khata";
 
   const getInitials = (name) => {
     if (!name) return "U";

@@ -3,7 +3,6 @@ import { getToken } from "next-auth/jwt";
 
 const protectedPaths = [
   "/dashboard",
-  "/contacts",
   "/workers",
   "/inventory",
   "/settings",
@@ -31,7 +30,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
-    "/contacts/:path*",
     "/workers/:path*",
     "/inventory/:path*",
     "/settings/:path*",

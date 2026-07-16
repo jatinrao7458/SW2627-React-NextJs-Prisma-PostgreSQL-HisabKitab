@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 
 interface NavbarProps {
   visible: boolean;
@@ -86,7 +87,7 @@ export default function Navbar({ visible }: NavbarProps) {
           }}
         >
           {/* ─── Logo ─── */}
-          <a
+          <Link
             href="/"
             style={{
               display: 'flex',
@@ -129,7 +130,7 @@ export default function Navbar({ visible }: NavbarProps) {
             >
               Hisab Kitab
             </span>
-          </a>
+          </Link>
 
           {/* ─── Desktop Nav Links ─── */}
           <div
@@ -174,7 +175,7 @@ export default function Navbar({ visible }: NavbarProps) {
             }}
             className="hidden md:flex"
           >
-            <a
+            <Link
               href="/login"
               style={{
                 fontSize: '13px',
@@ -197,8 +198,8 @@ export default function Navbar({ visible }: NavbarProps) {
               }}
             >
               Log in
-            </a>
-            <a
+            </Link>
+            <Link
               href="/register"
               style={{
                 fontSize: '13px',
@@ -222,7 +223,7 @@ export default function Navbar({ visible }: NavbarProps) {
               }}
             >
               Get started free
-            </a>
+            </Link>
           </div>
 
           {/* ─── Mobile Hamburger ─── */}
@@ -319,7 +320,7 @@ export default function Navbar({ visible }: NavbarProps) {
             ))}
             <div style={{ height: '1px', background: 'rgba(0,0,0,0.06)', margin: '8px 0' }} />
             <div style={{ display: 'flex', gap: '8px', padding: '4px 0 8px' }}>
-              <a
+              <Link
                 href="/login"
                 style={{
                   flex: 1,
@@ -335,8 +336,8 @@ export default function Navbar({ visible }: NavbarProps) {
                 }}
               >
                 Log in
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/register"
                 style={{
                   flex: 1,
@@ -352,7 +353,7 @@ export default function Navbar({ visible }: NavbarProps) {
                 }}
               >
                 Get started free
-              </a>
+              </Link>
             </div>
           </div>
         </div>
