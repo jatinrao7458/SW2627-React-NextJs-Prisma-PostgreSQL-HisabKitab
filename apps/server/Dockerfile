@@ -13,7 +13,7 @@ COPY packages/shared/package.json ./packages/shared/package.json
 # Copy Prisma schema (needed for prisma generate)
 COPY packages/database/prisma ./packages/database/prisma
 
-# Install ALL dependencies (prisma is a devDependency, needed for generate)
+# Install ALL dependencies (prisma is a devDep, needed for generate)
 RUN npm ci
 
 # Generate Prisma Client
@@ -24,7 +24,7 @@ COPY packages/database/src ./packages/database/src
 COPY packages/shared/src ./packages/shared/src
 COPY apps/server/src ./apps/server/src
 
-# Remove devDependencies after prisma generate is done
+# Now remove devDependencies for a lean production image
 RUN npm prune --omit=dev
 
 # Don't run production as root
