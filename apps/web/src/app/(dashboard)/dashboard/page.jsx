@@ -4,7 +4,9 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { User, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
+
+import DateRangePicker from "@/components/dashboard/DateRangePicker";
 
 import TotalBalanceCard from "@/components/dashboard/TotalBalanceCard";
 import KpiGrid from "@/components/dashboard/KpiGrid";
@@ -65,22 +67,14 @@ export default function DashboardPage() {
       animate="show"
     >
       {/* Header Area */}
-      <motion.div className="flex justify-between items-end mb-4" variants={itemVariants}>
+      <motion.div className="flex justify-between items-end mb-4 relative z-50" variants={itemVariants}>
         <div>
           <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Financial Overview</h1>
           <p className="text-gray-500 mt-1">A real-time snapshot of your financial health.</p>
         </div>
         
         <div className="flex gap-4 items-center">
-          <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
-            <User size={16} className="text-gray-400" />
-            Personal
-          </button>
-          
-          <button className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
-            <Calendar size={16} className="text-gray-400" />
-            January 12, 2026 - January 31, 2026
-          </button>
+          <DateRangePicker />
         </div>
       </motion.div>
 
