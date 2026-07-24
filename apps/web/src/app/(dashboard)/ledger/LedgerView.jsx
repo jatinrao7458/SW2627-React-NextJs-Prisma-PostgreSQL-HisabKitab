@@ -1,19 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, ArrowUpRight, ArrowDownLeft, FileText } from "lucide-react";
 import { containerVariants, itemVariants } from "@/lib/animations";
+import DateRangePicker from "@/components/dashboard/DateRangePicker";
 import styles from "./Ledger.module.css";
 import PartyLedgerModal from "./PartyLedgerModal";
 import AddPartyModal from "./AddPartyModal";
-import { createContact } from "@/actions/ledger";
+import TransactionModal from "../analytics/TransactionModal";
+import { createContact, deleteContact } from "@/actions/ledger";
+import { createTransaction } from "@/actions/analytics";
 
 export default function LedgerView({ initialContacts }) {
   const [activeTab, setActiveTab] = useState("COLLECT"); // COLLECT or GIVE
   const [activeParty, setActiveParty] = useState(null);
   const [isAddPartyModalOpen, setIsAddPartyModalOpen] = useState(false);
   const [parties, setParties] = useState(initialContacts);
+  const [transactionModalData, setTransactionModalData] = useState(null);
+
+  useEffect(() => {
+    setParties(initialContacts);
+  }, [initialContacts]);
 
   const handleAddParty = async (newParty) => {
     // Add fake ID so optimistic UI can render
@@ -27,6 +35,29 @@ export default function LedgerView({ initialContacts }) {
     } else {
       // In a real app we'd fetch the real ID, but Next.js Server Actions with revalidatePath 
       // will cause the page to reload the data anyway.
+    }
+  };
+
+  const handleNewTransactionClick = (party) => {
+    setTransactionModalData({ partyName: party.name, phone: party.phone || "" });
+  };
+
+  const handleAddTransactionSubmit = async (data) => {
+    const result = await createTransaction(data);
+    if (!result.success) {
+      alert("Failed to create transaction: " + result.error);
+    } else {
+      setTransactionModalData(null);
+    }
+  };
+
+  const handleDeleteParty = async (partyId) => {
+    setActiveParty(null);
+    const result = await deleteContact(partyId);
+    if (result.success) {
+      setParties(parties.filter(p => p.id !== partyId));
+    } else {
+      alert("Failed to delete party: " + result.error);
     }
   };
 
@@ -46,9 +77,9 @@ export default function LedgerView({ initialContacts }) {
         initial="hidden"
         animate="show"
         style={{ 
-          filter: (activeParty || isAddPartyModalOpen) ? "blur(8px)" : "none", 
+          filter: (activeParty || isAddPartyModalOpen || transactionModalData) ? "blur(8px)" : "none", 
           transition: "filter 0.3s ease",
-          pointerEvents: (activeParty || isAddPartyModalOpen) ? "none" : "auto"
+          pointerEvents: (activeParty || isAddPartyModalOpen || transactionModalData) ? "none" : "auto"
         }}
       >
       {/* HEADER */}
@@ -57,15 +88,18 @@ export default function LedgerView({ initialContacts }) {
           <h2 className={styles.title}>Ledger</h2>
           <p className={styles.subtitle}>Manage outstanding balances with your contacts</p>
         </div>
-        <motion.button
-          className={styles.primaryBtn}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => setIsAddPartyModalOpen(true)}
-        >
-          <Plus size={18} />
-          <span>Add Party</span>
-        </motion.button>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <DateRangePicker />
+          <motion.button
+            className={styles.primaryBtn}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setIsAddPartyModalOpen(true)}
+          >
+            <Plus size={18} />
+            <span>Add Party</span>
+          </motion.button>
+        </div>
       </motion.div>
 
       {/* SUMMARY CARDS */}
@@ -188,12 +222,21 @@ export default function LedgerView({ initialContacts }) {
         isOpen={!!activeParty} 
         onClose={() => setActiveParty(null)} 
         party={activeParty} 
+        onNewTransaction={handleNewTransactionClick}
+        onDeleteParty={handleDeleteParty}
       />
 
       <AddPartyModal 
         isOpen={isAddPartyModalOpen} 
         onClose={() => setIsAddPartyModalOpen(false)} 
         onAddParty={handleAddParty} 
+      />
+
+      <TransactionModal 
+        isOpen={!!transactionModalData} 
+        onClose={() => setTransactionModalData(null)} 
+        onAddTransaction={handleAddTransactionSubmit}
+        initialData={transactionModalData}
       />
     </>
   );

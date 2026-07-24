@@ -1,28 +1,11 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowUpRight, ArrowDownLeft, FileText } from "lucide-react";
+import { X, ArrowUpRight, ArrowDownLeft, FileText, Plus, Trash2, Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { getContactTransactions } from "@/actions/ledger";
 import styles from "./PartyLedgerModal.module.css";
 
-// Mock specific transactions mapped by party ID
-const mockPartyTransactions = {
-  l1: [
-    { id: 't1', date: 'Today, 18 Jul 2026', time: '10:30 AM', type: 'YOU_GAVE', amount: 5000, note: 'Advance payment' },
-    { id: 't2', date: 'Today, 18 Jul 2026', time: '02:15 PM', type: 'YOU_GOT', amount: 2000, note: '' },
-    { id: 't3', date: '15 Jul 2026', time: '09:00 AM', type: 'YOU_GAVE', amount: 9500, note: 'Materials cost' }
-  ],
-  l2: [
-    { id: 't4', date: 'Yesterday, 17 Jul 2026', time: '11:45 AM', type: 'YOU_GOT', amount: 5500, note: 'Invoice #1024 clearance' }
-  ],
-  l3: [
-    { id: 't5', date: '14 Jul 2026', time: '11:00 AM', type: 'YOU_GOT', amount: 3500, note: 'Partial payment' }
-  ],
-  l4: [
-    { id: 't6', date: '12 Jul 2026', time: '09:45 AM', type: 'YOU_GAVE', amount: 1500, note: 'Petty cash' }
-  ],
-  l5: [
-    { id: 't7', date: '10 Jul 2026', time: '02:20 PM', type: 'YOU_GAVE', amount: 8750, note: 'Transport charges for June' }
-  ]
-};
+
 
 const overlayVariants = {
   hidden: { opacity: 0 },
@@ -43,10 +26,25 @@ const panelVariants = {
   }
 };
 
-export default function PartyLedgerModal({ isOpen, onClose, party }) {
-  if (!isOpen || !party) return null;
+export default function PartyLedgerModal({ isOpen, onClose, party, onNewTransaction, onDeleteParty }) {
+  const { data: session } = useSession();
+  const isOwner = session?.user?.shopRole === "OWNER";
+  const [transactions, setTransactions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const transactions = mockPartyTransactions[party.id] || [];
+  useEffect(() => {
+    if (isOpen && party) {
+      setIsLoading(true);
+      getContactTransactions(party.id).then(data => {
+        setTransactions(data);
+        setIsLoading(false);
+      });
+    } else {
+      setTransactions([]);
+    }
+  }, [isOpen, party]);
+
+  if (!isOpen || !party) return null;
 
   // Group transactions by date
   const groupedTransactions = transactions.reduce((groups, tx) => {
@@ -92,6 +90,33 @@ export default function PartyLedgerModal({ isOpen, onClose, party }) {
                 <h3 className={styles.contactName}>{party.name}</h3>
                 <p className={styles.contactPhone}>{party.phone}</p>
               </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginLeft: 'auto' }}>
+                <button 
+                  className={styles.newTxBtn}
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#4f46e5', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+                  onClick={() => {
+                    onClose();
+                    onNewTransaction(party);
+                  }}
+                >
+                  <Plus size={16} />
+                  New Transaction
+                </button>
+                {isOwner && (
+                  <button 
+                    className={styles.deletePartyBtn}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: '#fee2e2', color: '#dc2626', padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
+                    onClick={() => {
+                      if (confirm("Are you sure you want to delete this party? All transactions will remain but the party will be removed from your ledger.")) {
+                        onDeleteParty(party.id);
+                      }
+                    }}
+                  >
+                    <Trash2 size={16} />
+                    Delete Party
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className={styles.balanceBanner}>
@@ -107,7 +132,11 @@ export default function PartyLedgerModal({ isOpen, onClose, party }) {
 
           {/* BODY / TRANSACTIONS LIST */}
           <div className={styles.content}>
-            {Object.keys(groupedTransactions).length === 0 ? (
+            {isLoading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#4f46e5' }}>
+                <Loader2 className="animate-spin" size={32} />
+              </div>
+            ) : Object.keys(groupedTransactions).length === 0 ? (
               <div style={{ textAlign: 'center', color: 'rgba(26,26,26,0.5)', marginTop: '4rem' }}>
                 <FileText size={48} style={{ opacity: 0.2, margin: '0 auto 1rem' }} />
                 <p>No transactions found for this party.</p>
