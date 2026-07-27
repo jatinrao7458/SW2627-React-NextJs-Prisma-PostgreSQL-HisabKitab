@@ -13,14 +13,37 @@ async function getSessionContext() {
   return session.user;
 }
 
-export async function getProducts() {
+export async function getProducts(filters = {}) {
   try {
     const user = await getSessionContext();
+    
+    const whereClause = {
+      shopId: user.activeShopId,
+      isDeleted: false
+    };
+
+    if (filters.name) {
+      whereClause.name = { contains: filters.name, mode: 'insensitive' };
+    }
+    
+    if (filters.category && filters.category !== "ALL") {
+      whereClause.category = filters.category;
+    }
+
+    if (filters.expiryDate) {
+      // Find products expiring exactly on the selected day
+      const targetDate = new Date(filters.expiryDate);
+      const nextDay = new Date(targetDate);
+      nextDay.setDate(targetDate.getDate() + 1);
+      
+      whereClause.expiryDate = {
+        gte: targetDate,
+        lt: nextDay
+      };
+    }
+
     const products = await db.product.findMany({
-      where: { 
-        shopId: user.activeShopId,
-        isDeleted: false
-      },
+      where: whereClause,
       orderBy: { createdAt: 'desc' }
     });
     

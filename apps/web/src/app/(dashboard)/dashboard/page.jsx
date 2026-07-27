@@ -4,7 +4,8 @@ import DashboardView from "./DashboardView";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage({ searchParams }) {
-  const range = searchParams?.range || "All Time";
+  const params = await searchParams;
+  const range = params?.range || "All Time";
   const result = await getDashboardData(range);
   const dashboardData = result.success ? result.data : null;
 

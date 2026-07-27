@@ -313,7 +313,10 @@ export default function AnalyticsView({ initialTransactions }) {
                         {tx.status === "PENDING" && <span style={{ marginLeft: "8px", color: "#d97706", fontWeight: "bold", fontSize: "10px", background: "#fef3c7", padding: "2px 6px", borderRadius: "4px" }}>PENDING</span>}
                         {tx.status === "REJECTED" && <span style={{ marginLeft: "8px", color: "#dc2626", fontWeight: "bold", fontSize: "10px", background: "#fee2e2", padding: "2px 6px", borderRadius: "4px" }}>REJECTED</span>}
                         {tx.status === "PENDING_DELETION" && <span style={{ marginLeft: "8px", color: "#dc2626", fontWeight: "bold", fontSize: "10px", background: "#fee2e2", padding: "2px 6px", borderRadius: "4px" }}>DELETION REQUESTED</span>}
-                        {tx.editedAt && <span style={{ marginLeft: "8px", color: "#6b7280", fontSize: "10px", fontStyle: "italic" }}>(Edited)</span>}
+                        {tx.editedAt && <span style={{ marginLeft: "8px", color: "#6b7280", fontSize: "10px", fontStyle: "italic" }}>(Edited on {new Date(tx.editedAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })})</span>}
+                      </span>
+                      <span style={{ fontSize: "11px", color: "rgba(26,26,26,0.4)", marginTop: "2px", fontWeight: "500" }}>
+                        Added by: {tx.addedBy || "Unknown"}
                       </span>
                     </div>
                   </div>

@@ -65,7 +65,7 @@ export async function getTransactions(range = "All Time") {
 
     const transactions = await db.transaction.findMany({
       where: whereClause,
-      include: { contact: true },
+      include: { contact: true, createdByUser: { select: { name: true, email: true } } },
       orderBy: { createdAt: 'desc' }
     });
     
@@ -78,6 +78,7 @@ export async function getTransactions(range = "All Time") {
       date: tx.createdAt.toISOString(),
       note: tx.note || "",
       status: tx.status,
+      addedBy: tx.createdByUser?.name || tx.createdByUser?.email || "Unknown",
       editedAt: tx.editedAt ? tx.editedAt.toISOString() : null,
       deletedAt: tx.deletedAt ? tx.deletedAt.toISOString() : null
     }));

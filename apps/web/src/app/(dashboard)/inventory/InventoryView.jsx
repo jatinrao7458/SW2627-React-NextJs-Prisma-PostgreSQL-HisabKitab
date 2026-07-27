@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, MoreVertical, Package, AlertTriangle, TrendingUp, RefreshCcw } from "lucide-react";
+import { Plus, MoreVertical, Package, AlertTriangle, TrendingUp, RefreshCcw, Search, Calendar, X, Filter } from "lucide-react";
 import { containerVariants, itemVariants } from "@/lib/animations";
 import styles from "./Inventory.module.css";
 import AddInventoryModal from "./AddInventoryModal";
@@ -11,6 +11,26 @@ import { createProduct } from "@/actions/inventory";
 export default function InventoryView({ initialInventory }) {
   const [inventory, setInventory] = useState(initialInventory);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [expiryDateFilter, setExpiryDateFilter] = useState("");
+
+  useEffect(() => {
+    setInventory(initialInventory);
+  }, [initialInventory]);
+
+  const filteredInventory = inventory.filter(product => {
+    if (categoryFilter !== "ALL" && product.category !== categoryFilter) return false;
+    if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (expiryDateFilter && product.expiryDate) {
+      const pDate = new Date(product.expiryDate).toISOString().slice(0, 10);
+      if (pDate !== expiryDateFilter) return false;
+    } else if (expiryDateFilter && !product.expiryDate) {
+      return false; // User wants a specific expiry date, but this product has none
+    }
+    return true;
+  });
 
   const handleAddProduct = async (newProduct) => {
     // Optimistic UI update
@@ -55,9 +75,55 @@ export default function InventoryView({ initialInventory }) {
         </motion.button>
       </motion.div>
 
+      {/* FILTERS */}
+      <motion.div className={styles.filtersContainer} variants={itemVariants}>
+        <div className={styles.searchBar}>
+          <Search size={16} className={styles.searchIcon} />
+          <input 
+            type="text" 
+            placeholder="Search products..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={styles.searchInput}
+          />
+        </div>
+        
+        <div className={styles.filterDropdown}>
+          <Filter size={16} className={styles.searchIcon} />
+          <select 
+            value={categoryFilter} 
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className={styles.searchInput}
+          >
+            <option value="ALL">All Categories</option>
+            <option value="Groceries">Groceries</option>
+            <option value="Dairy">Dairy</option>
+            <option value="Snacks">Snacks</option>
+            <option value="Household">Household</option>
+            <option value="Beverages">Beverages</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div className={styles.dateFilter}>
+          <Calendar size={16} className={styles.searchIcon} />
+          <input 
+            type="date"
+            value={expiryDateFilter}
+            onChange={(e) => setExpiryDateFilter(e.target.value)}
+            className={styles.searchInput}
+          />
+          {expiryDateFilter && (
+            <button onClick={() => setExpiryDateFilter("")} className={styles.clearDateBtn}>
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      </motion.div>
+
       {/* PRODUCT GRID */}
       <motion.section className={styles.grid} variants={containerVariants}>
-        {inventory.map((product) => {
+        {filteredInventory.map((product) => {
           
           let statusColor = "#10B981"; // Healthy (Emerald)
           let StatusIcon = Package;
@@ -145,6 +211,16 @@ export default function InventoryView({ initialInventory }) {
             </motion.div>
           );
         })}
+        {filteredInventory.length === 0 && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{ padding: '4rem 2rem', textAlign: 'center', color: 'rgba(26,26,26,0.5)', gridColumn: '1 / -1' }}
+          >
+            <Package size={48} style={{ opacity: 0.2, margin: '0 auto 1rem' }} />
+            <p>No products found for this filter.</p>
+          </motion.div>
+        )}
       </motion.section>
       </motion.div>
 
