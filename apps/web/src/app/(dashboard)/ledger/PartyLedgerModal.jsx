@@ -26,7 +26,7 @@ const panelVariants = {
   }
 };
 
-export default function PartyLedgerModal({ isOpen, onClose, party, onNewTransaction, onDeleteParty }) {
+export default function PartyLedgerModal({ isOpen, onClose, party, onAdjustBalance, onDeleteParty }) {
   const { data: session } = useSession();
   const isOwner = session?.user?.shopRole === "OWNER";
   const [transactions, setTransactions] = useState([]);
@@ -96,11 +96,11 @@ export default function PartyLedgerModal({ isOpen, onClose, party, onNewTransact
                   style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#4f46e5', color: 'white', padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: '500' }}
                   onClick={() => {
                     onClose();
-                    onNewTransaction(party);
+                    onAdjustBalance(party);
                   }}
                 >
                   <Plus size={16} />
-                  New Transaction
+                  Adjust Balance
                 </button>
                 {isOwner && (
                   <button 
