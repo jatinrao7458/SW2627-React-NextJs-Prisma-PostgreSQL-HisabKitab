@@ -130,22 +130,7 @@ export async function createTransaction(data) {
       // Determine status based on role
       const status = user.shopRole === "STAFF" ? "PENDING" : "APPROVED";
 
-      // If we gave them money (YOU_GAVE), they owe us more (+amount)
-      // If we got money from them (YOU_GOT), their balance decreases (-amount)
-      const balanceAdjustment = txType === "YOU_GAVE" ? amountVal : -amountVal;
-      
-      let newBalance = Number(contact.balance || 0);
-
-      // Only update contact balance if the transaction is APPROVED by an OWNER
-      if (status === "APPROVED") {
-        newBalance = newBalance + balanceAdjustment;
-        await tx.contact.update({
-          where: { id: contact.id },
-          data: { balance: newBalance }
-        });
-      }
-
-      // Create transaction
+      // Create transaction (no longer updates contact balance)
       await tx.transaction.create({
         data: {
           shopId: user.activeShopId,
@@ -156,7 +141,7 @@ export async function createTransaction(data) {
           status: status,
           createdAt: data.date ? new Date(data.date) : new Date(),
           createdBy: user.id,
-          balanceAfter: newBalance
+          balanceAfter: Number(contact.balance || 0)
         }
       });
     });
@@ -188,20 +173,11 @@ export async function approveTransaction(transactionId) {
         throw new Error("Invalid transaction or already processed.");
       }
 
-      const balanceAdjustment = transaction.type === "YOU_GAVE" ? Number(transaction.amount) : -Number(transaction.amount);
-
-      // Update contact balance
-      const updatedContact = await tx.contact.update({
-        where: { id: transaction.contactId },
-        data: { balance: { increment: balanceAdjustment } }
-      });
-
-      // Update transaction status
+      // Update transaction status (no longer updates contact balance)
       await tx.transaction.update({
         where: { id: transactionId },
         data: { 
-          status: "APPROVED",
-          balanceAfter: Number(updatedContact.balance)
+          status: "APPROVED"
         }
       });
     });
@@ -253,28 +229,7 @@ export async function editTransaction(txId, data) {
       const isOwner = user.shopRole === "OWNER";
       const newStatus = isOwner ? "APPROVED" : "PENDING";
       
-      // Revert the old effect on the balance if it was APPROVED
-      if (transaction.status === "APPROVED" || transaction.status === "PENDING_DELETION") {
-        const oldBalanceAdjustment = transaction.type === "YOU_GAVE" ? -Number(transaction.amount) : Number(transaction.amount);
-        
-        await tx.contact.update({
-          where: { id: transaction.contactId },
-          data: { balance: { increment: oldBalanceAdjustment } }
-        });
-      }
-      
-      let newBalanceAfter = transaction.balanceAfter;
-      
-      // If the new status is APPROVED (Owner), apply the new effect immediately
-      if (newStatus === "APPROVED") {
-        const newBalanceAdjustment = txType === "YOU_GAVE" ? amountVal : -amountVal;
-        const updatedContact = await tx.contact.update({
-          where: { id: transaction.contactId },
-          data: { balance: { increment: newBalanceAdjustment } }
-        });
-        newBalanceAfter = updatedContact.balance;
-      }
-      
+      // Update transaction (no longer affects contact balance)
       await tx.transaction.update({
         where: { id: txId },
         data: {
@@ -283,8 +238,7 @@ export async function editTransaction(txId, data) {
           note: data.note || "",
           status: newStatus,
           editedAt: new Date(),
-          editedBy: user.id,
-          balanceAfter: newBalanceAfter
+          editedBy: user.id
         }
       });
     });
@@ -311,13 +265,6 @@ export async function deleteTransaction(txId) {
       if (!transaction) throw new Error("Transaction not found");
 
       if (isOwner) {
-        if (transaction.status === "APPROVED" || transaction.status === "PENDING_DELETION") {
-          const oldBalanceAdjustment = transaction.type === "YOU_GAVE" ? -Number(transaction.amount) : Number(transaction.amount);
-          await tx.contact.update({
-            where: { id: transaction.contactId },
-            data: { balance: { increment: oldBalanceAdjustment } }
-          });
-        }
         await tx.transaction.update({
           where: { id: txId },
           data: {
@@ -370,14 +317,7 @@ export async function approveDeletion(txId) {
         throw new Error("Invalid transaction or not pending deletion.");
       }
 
-      // Revert the balance effect
-      const balanceAdjustment = transaction.type === "YOU_GAVE" ? -Number(transaction.amount) : Number(transaction.amount);
-      await tx.contact.update({
-        where: { id: transaction.contactId },
-        data: { balance: { increment: balanceAdjustment } }
-      });
-
-      // Mark as deleted
+      // Mark as deleted (no longer reverts contact balance)
       await tx.transaction.update({
         where: { id: txId },
         data: {

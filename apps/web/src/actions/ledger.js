@@ -24,48 +24,7 @@ export async function getContacts(range = "All Time") {
       orderBy: { createdAt: 'desc' }
     });
 
-    let startDate = null;
-    let endDate = null;
-    const now = new Date();
-    
-    if (range === "Today") {
-      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000 - 1);
-    } else if (range === "Yesterday") {
-      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
-      endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000 - 1);
-    } else if (range === "Last 7 Days") {
-      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
-      endDate = now;
-    } else if (range === "This Month") {
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-    } else if (range === "Last Month") {
-      startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      endDate = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-    }
-
-    const txDateFilter = startDate && endDate ? { gte: startDate, lte: endDate } : undefined;
-
-    if (txDateFilter) {
-      const rangeTxs = await db.transaction.findMany({
-        where: { shopId: user.activeShopId, isDeleted: false, status: 'APPROVED', createdAt: txDateFilter },
-        select: { contactId: true, amount: true, type: true }
-      });
-      
-      const balanceMap = {};
-      for (const tx of rangeTxs) {
-        if (!balanceMap[tx.contactId]) balanceMap[tx.contactId] = 0;
-        if (tx.type === "YOU_GAVE") balanceMap[tx.contactId] += Number(tx.amount);
-        if (tx.type === "YOU_GOT") balanceMap[tx.contactId] -= Number(tx.amount);
-      }
-      
-      // Override the balances
-      contacts = contacts.map(c => ({
-        ...c,
-        balance: balanceMap[c.id] || 0
-      }));
-    }
+    // Dynamic balance calculation removed as Ledger is now decoupled from Analytics transactions
     
     // Serialize Decimals and Dates for Client Components
     return contacts.map(c => ({
@@ -165,5 +124,28 @@ export async function getContactTransactions(contactId) {
   } catch (error) {
     console.error("Failed to fetch contact transactions:", error);
     return [];
+  }
+}
+
+export async function adjustContactBalance(contactId, amount, type) {
+  try {
+    const user = await getSessionContext();
+    const amountVal = parseFloat(amount) || 0;
+    
+    // type: "GIVE" means you gave them money (they owe you more -> +amount)
+    // type: "COLLECT" means they gave you money (they owe you less -> -amount)
+    const adjustment = type === "GIVE" ? amountVal : -amountVal;
+
+    await db.contact.update({
+      where: { id: contactId, shopId: user.activeShopId },
+      data: { balance: { increment: adjustment } }
+    });
+
+    revalidatePath("/ledger");
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to adjust contact balance:", error);
+    return { success: false, error: error.message || String(error) };
   }
 }

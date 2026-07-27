@@ -7,16 +7,15 @@ import { containerVariants, itemVariants } from "@/lib/animations";
 import styles from "./Ledger.module.css";
 import PartyLedgerModal from "./PartyLedgerModal";
 import AddPartyModal from "./AddPartyModal";
-import TransactionModal from "../analytics/TransactionModal";
-import { createContact, deleteContact } from "@/actions/ledger";
-import { createTransaction } from "@/actions/analytics";
+import AdjustBalanceModal from "./AdjustBalanceModal";
+import { createContact, deleteContact, adjustContactBalance } from "@/actions/ledger";
 
 export default function LedgerView({ initialContacts }) {
   const [activeTab, setActiveTab] = useState("COLLECT"); // COLLECT or GIVE
   const [activeParty, setActiveParty] = useState(null);
   const [isAddPartyModalOpen, setIsAddPartyModalOpen] = useState(false);
   const [parties, setParties] = useState(initialContacts);
-  const [transactionModalData, setTransactionModalData] = useState(null);
+  const [adjustModalData, setAdjustModalData] = useState(null);
 
   useEffect(() => {
     setParties(initialContacts);
@@ -37,16 +36,24 @@ export default function LedgerView({ initialContacts }) {
     }
   };
 
-  const handleNewTransactionClick = (party) => {
-    setTransactionModalData({ partyName: party.name, phone: party.phone || "" });
+  const handleAdjustBalanceClick = (party) => {
+    setAdjustModalData(party);
   };
 
-  const handleAddTransactionSubmit = async (data) => {
-    const result = await createTransaction(data);
+  const handleAdjustBalanceSubmit = async (data) => {
+    const result = await adjustContactBalance(adjustModalData.id, data.amount, data.type);
     if (!result.success) {
-      alert("Failed to create transaction: " + result.error);
+      alert("Failed to update balance: " + result.error);
     } else {
-      setTransactionModalData(null);
+      // Optimistic update for UI
+      setParties(parties.map(p => {
+        if (p.id === adjustModalData.id) {
+          const adjustment = data.type === "GIVE" ? parseFloat(data.amount) : -parseFloat(data.amount);
+          return { ...p, balance: (parseFloat(p.balance) + adjustment).toString() };
+        }
+        return p;
+      }));
+      setAdjustModalData(null);
     }
   };
 
@@ -76,9 +83,9 @@ export default function LedgerView({ initialContacts }) {
         initial="hidden"
         animate="show"
         style={{ 
-          filter: (activeParty || isAddPartyModalOpen || transactionModalData) ? "blur(8px)" : "none", 
+          filter: (activeParty || isAddPartyModalOpen || adjustModalData) ? "blur(8px)" : "none", 
           transition: "filter 0.3s ease",
-          pointerEvents: (activeParty || isAddPartyModalOpen || transactionModalData) ? "none" : "auto"
+          pointerEvents: (activeParty || isAddPartyModalOpen || adjustModalData) ? "none" : "auto"
         }}
       >
       {/* HEADER */}
@@ -220,7 +227,7 @@ export default function LedgerView({ initialContacts }) {
         isOpen={!!activeParty} 
         onClose={() => setActiveParty(null)} 
         party={activeParty} 
-        onNewTransaction={handleNewTransactionClick}
+        onAdjustBalance={handleAdjustBalanceClick}
         onDeleteParty={handleDeleteParty}
       />
 
@@ -230,11 +237,11 @@ export default function LedgerView({ initialContacts }) {
         onAddParty={handleAddParty} 
       />
 
-      <TransactionModal 
-        isOpen={!!transactionModalData} 
-        onClose={() => setTransactionModalData(null)} 
-        onAddTransaction={handleAddTransactionSubmit}
-        initialData={transactionModalData}
+      <AdjustBalanceModal 
+        isOpen={!!adjustModalData} 
+        onClose={() => setAdjustModalData(null)} 
+        onAdjustBalance={handleAdjustBalanceSubmit}
+        partyName={adjustModalData?.name}
       />
     </>
   );
