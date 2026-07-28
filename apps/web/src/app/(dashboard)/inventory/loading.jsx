@@ -1,40 +1,30 @@
-"use client";
-
-import { motion } from "framer-motion";
-import { containerVariants, itemVariants } from "@/lib/animations";
 import styles from "./Inventory.module.css";
 
 export default function InventoryLoading() {
   return (
-    <motion.div
-      className={styles.container}
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-    >
+    <div className={styles.container}>
       {/* HEADER SKELETON */}
-      <motion.div className={styles.header} variants={itemVariants}>
+      <div className={styles.header}>
         <div className={styles.headerText}>
           <div className="h-10 w-48 bg-gray-200 rounded-lg animate-pulse mb-2"></div>
           <div className="h-5 w-72 bg-gray-200 rounded-lg animate-pulse"></div>
         </div>
         <div className="h-12 w-40 bg-gray-200 rounded-xl animate-pulse"></div>
-      </motion.div>
+      </div>
 
       {/* FILTERS SKELETON */}
-      <motion.div className={styles.filtersContainer} variants={itemVariants}>
+      <div className={styles.filtersContainer}>
         <div className="flex-[2] h-12 bg-gray-200 rounded-xl animate-pulse"></div>
         <div className="flex-1 h-12 bg-gray-200 rounded-xl animate-pulse"></div>
         <div className="flex-1 h-12 bg-gray-200 rounded-xl animate-pulse"></div>
-      </motion.div>
+      </div>
 
       {/* PRODUCT GRID SKELETON */}
-      <motion.section className={styles.grid} variants={containerVariants}>
+      <section className={styles.grid}>
         {[...Array(6)].map((_, i) => (
-          <motion.div
+          <div
             key={i}
             className={`${styles.card} animate-pulse`}
-            variants={itemVariants}
           >
             <div className={styles.cardAccent} style={{ backgroundColor: "#e5e7eb" }} />
             
@@ -72,9 +62,9 @@ export default function InventoryLoading() {
             <div className={styles.cardActions}>
               <div className="h-10 w-full bg-gray-200 rounded-xl"></div>
             </div>
-          </motion.div>
+          </div>
         ))}
-      </motion.section>
-    </motion.div>
+      </section>
+    </div>
   );
 }

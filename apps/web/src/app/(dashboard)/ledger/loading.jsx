@@ -1,19 +1,10 @@
-"use client";
-
-import { motion } from "framer-motion";
-import { containerVariants, itemVariants } from "@/lib/animations";
 import styles from "./Ledger.module.css";
 
 export default function LedgerLoading() {
   return (
-    <motion.div
-      className={styles.container}
-      variants={containerVariants}
-      initial="hidden"
-      animate="show"
-    >
+    <div className={styles.container}>
       {/* HEADER SKELETON */}
-      <motion.div className={styles.header} variants={itemVariants}>
+      <div className={styles.header}>
         <div>
           <div className="h-10 w-40 bg-gray-200 rounded-lg animate-pulse mb-2"></div>
           <div className="h-5 w-80 bg-gray-200 rounded-lg animate-pulse"></div>
@@ -21,15 +12,14 @@ export default function LedgerLoading() {
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <div className="h-12 w-36 bg-gray-200 rounded-xl animate-pulse"></div>
         </div>
-      </motion.div>
+      </div>
 
       {/* SUMMARY CARDS SKELETON */}
-      <motion.section className={styles.summaryGrid} variants={containerVariants}>
+      <section className={styles.summaryGrid}>
         {[...Array(2)].map((_, i) => (
-          <motion.div 
+          <div 
             key={i}
             className={`${styles.summaryCard} animate-pulse`} 
-            variants={itemVariants}
           >
             <div className={styles.summaryAccent} style={{ backgroundColor: "#e5e7eb" }} />
             <div className={`${styles.summaryIcon} bg-gray-200`}></div>
@@ -37,20 +27,20 @@ export default function LedgerLoading() {
               <div className="h-4 w-28 bg-gray-200 rounded-md mb-2"></div>
               <div className="h-8 w-40 bg-gray-200 rounded-lg"></div>
             </div>
-          </motion.div>
+          </div>
         ))}
-      </motion.section>
+      </section>
 
       {/* TABS SKELETON */}
-      <motion.div className={styles.tabs} variants={itemVariants}>
+      <div className={styles.tabs}>
         <div className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse"></div>
         <div className="h-10 w-32 bg-gray-200 rounded-lg animate-pulse"></div>
-      </motion.div>
+      </div>
 
       {/* LIST SKELETON */}
-      <motion.section className={styles.ledgerList} variants={itemVariants}>
+      <section className={styles.ledgerList}>
         {[...Array(4)].map((_, i) => (
-          <motion.div
+          <div
             key={i}
             className={`${styles.row} animate-pulse`}
           >
@@ -66,9 +56,9 @@ export default function LedgerLoading() {
               <div className="h-6 w-24 bg-gray-200 rounded-md mb-1"></div>
               <div className="h-4 w-16 bg-gray-200 rounded-md self-end"></div>
             </div>
-          </motion.div>
+          </div>
         ))}
-      </motion.section>
-    </motion.div>
+      </section>
+    </div>
   );
 }
