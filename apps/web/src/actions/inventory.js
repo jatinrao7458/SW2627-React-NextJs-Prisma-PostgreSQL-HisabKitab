@@ -21,7 +21,18 @@ export async function getProducts() {
         shopId: user.activeShopId,
         isDeleted: false
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        sku: true,
+        currentStock: true,
+        unit: true,
+        purchasePrice: true,
+        sellingPrice: true,
+        expiryDate: true,
+      }
     });
 
     // Serialize Decimals for Client Components

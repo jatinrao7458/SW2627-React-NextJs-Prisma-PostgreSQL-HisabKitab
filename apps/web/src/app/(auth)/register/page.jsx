@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -80,7 +81,20 @@ export default function RegisterPage() {
         setError(sanitizeError(data.error));
         setLoading(false);
       } else {
-        router.push("/login?registered=true");
+        const loginPayload = { redirect: false, email, password };
+        if (role === 'WORKER' && shopId) {
+          loginPayload.shopId = shopId;
+        }
+        const signInRes = await signIn("credentials", loginPayload);
+        
+        if (signInRes?.error) {
+          setError("Registration successful, but auto-login failed. Please log in manually.");
+          setLoading(false);
+          router.push("/login?registered=true");
+        } else {
+          router.push("/dashboard");
+          router.refresh();
+        }
       }
     } catch {
       setError("An unexpected error occurred. Please try again.");

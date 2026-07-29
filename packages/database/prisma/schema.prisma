@@ -20,36 +20,36 @@ model User {
   image         String?
   passwordHash  String?
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   preferredLanguage String @default("en")
 
-  accounts      Account[]
-  sessions      Session[]
-  shopMembers   ShopMember[]
+  accounts    Account[]
+  sessions    Session[]
+  shopMembers ShopMember[]
 
-  transactionsCreated   Transaction[]      @relation("TransactionCreatedBy")
-  transactionsDeleted   Transaction[]      @relation("TransactionDeletedBy")
-  transactionAudits     TransactionAudit[] @relation("TransactionAuditChangedBy")
-  contactsDeleted       Contact[]          @relation("ContactDeletedBy")
-  attendanceMarkedBy    Attendance[]       @relation("AttendanceMarkedBy")
-  salaryPaymentsPaidBy  SalaryPayment[]    @relation("SalaryPaymentPaidBy")
-  salaryAudits          SalaryAudit[]      @relation("SalaryAuditChangedBy")
-  stockEntriesRecorded  StockEntry[]       @relation("StockEntryRecordedBy")
-  stockEntriesReviewed  StockEntry[]       @relation("StockEntryReviewedBy")
-  lossesRecorded        Loss[]             @relation("LossRecordedBy")
-  paperImportsUploaded  PaperImportBatch[] @relation("PaperImportUploadedBy")
-  paperImportPagesReviewed PaperImportPage[] @relation("PaperImportPageReviewedBy")
-  attachmentsUploaded   Attachment[]       @relation("AttachmentUploadedBy")
-  notifications         Notification[]
-  productsDeleted       Product[]          @relation("ProductDeletedBy")
-  workersDeleted        Worker[]           @relation("WorkerDeletedBy")
+  transactionsCreated      Transaction[]      @relation("TransactionCreatedBy")
+  transactionsDeleted      Transaction[]      @relation("TransactionDeletedBy")
+  transactionAudits        TransactionAudit[] @relation("TransactionAuditChangedBy")
+  contactsDeleted          Contact[]          @relation("ContactDeletedBy")
+  attendanceMarkedBy       Attendance[]       @relation("AttendanceMarkedBy")
+  salaryPaymentsPaidBy     SalaryPayment[]    @relation("SalaryPaymentPaidBy")
+  salaryAudits             SalaryAudit[]      @relation("SalaryAuditChangedBy")
+  stockEntriesRecorded     StockEntry[]       @relation("StockEntryRecordedBy")
+  stockEntriesReviewed     StockEntry[]       @relation("StockEntryReviewedBy")
+  lossesRecorded           Loss[]             @relation("LossRecordedBy")
+  paperImportsUploaded     PaperImportBatch[] @relation("PaperImportUploadedBy")
+  paperImportPagesReviewed PaperImportPage[]  @relation("PaperImportPageReviewedBy")
+  attachmentsUploaded      Attachment[]       @relation("AttachmentUploadedBy")
+  notifications            Notification[]
+  productsDeleted          Product[]          @relation("ProductDeletedBy")
+  workersDeleted           Worker[]           @relation("WorkerDeletedBy")
 
-  contactsCreated       Contact[]          @relation("ContactCreatedBy")
-  productsCreated       Product[]          @relation("ProductCreatedBy")
-  workersCreated        Worker[]           @relation("WorkerCreatedBy")
-  shopsCreated          Shop[]             @relation("ShopCreatedBy")
+  contactsCreated Contact[] @relation("ContactCreatedBy")
+  productsCreated Product[] @relation("ProductCreatedBy")
+  workersCreated  Worker[]  @relation("WorkerCreatedBy")
+  shopsCreated    Shop[]    @relation("ShopCreatedBy")
 
   @@index([email])
 }
@@ -115,9 +115,9 @@ model Shop {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  defaultLanguage   String  @default("en")
-  halfDayFraction   Decimal @default(0.5) @db.Decimal(3, 2)
-  expiryAlertDays   Int     @default(3)
+  defaultLanguage String  @default("en")
+  halfDayFraction Decimal @default(0.5) @db.Decimal(3, 2)
+  expiryAlertDays Int     @default(3)
 
   staffCanEditTransactions   Boolean @default(true)
   staffCanDeleteTransactions Boolean @default(false)
@@ -139,6 +139,7 @@ model Shop {
   createdByUser User?   @relation("ShopCreatedBy", fields: [createdBy], references: [id])
 
   @@index([name])
+  @@index([createdBy])
 }
 
 model ShopMember {
@@ -148,8 +149,8 @@ model ShopMember {
   role     Role
   status   MemberStatus @default(ACTIVE)
   joinedAt DateTime     @default(now())
-  
-  permissions Json?     // Stores worker-specific page access permissions
+
+  permissions Json? // Stores worker-specific page access permissions
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
@@ -176,17 +177,17 @@ enum TransactionStatus {
 }
 
 model Contact {
-  id      String  @id @default(cuid())
-  shopId  String
-  name    String
-  phone   String?
-  email   String?
+  id     String  @id @default(cuid())
+  shopId String
+  name   String
+  phone  String?
+  email  String?
 
-  balance Decimal @default(0) @db.Decimal(14, 2)
+  balance Decimal   @default(0) @db.Decimal(14, 2)
   dueDate DateTime?
 
-  openingBalance      Decimal   @default(0) @db.Decimal(14, 2)
-  openingBalanceAsOf  DateTime?
+  openingBalance     Decimal   @default(0) @db.Decimal(14, 2)
+  openingBalanceAsOf DateTime?
 
   isDeleted Boolean   @default(false)
   deletedAt DateTime?
@@ -195,36 +196,37 @@ model Contact {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  shop             Shop                @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  deletedByUser    User?               @relation("ContactDeletedBy", fields: [deletedBy], references: [id])
+  shop             Shop              @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  deletedByUser    User?             @relation("ContactDeletedBy", fields: [deletedBy], references: [id])
   transactions     Transaction[]
   attachments      Attachment[]
   paperImportPages PaperImportPage[]
 
-  createdBy        String?
-  createdByUser    User?               @relation("ContactCreatedBy", fields: [createdBy], references: [id])
+  createdBy     String?
+  createdByUser User?   @relation("ContactCreatedBy", fields: [createdBy], references: [id])
 
   @@index([shopId])
   @@index([shopId, isDeleted])
-  @@index([phone])
+  @@index([shopId, name])
+  @@index([shopId, phone])
   @@index([email])
   @@index([shopId, dueDate])
 }
 
 model Transaction {
-  id        String          @id @default(cuid())
+  id        String            @id @default(cuid())
   shopId    String
   contactId String
   type      TransactionType
-  amount    Decimal         @db.Decimal(14, 2)
+  amount    Decimal           @db.Decimal(14, 2)
   note      String?
   status    TransactionStatus @default(APPROVED)
 
   balanceAfter Decimal @db.Decimal(14, 2)
 
-  version   Int       @default(1)
-  lockedBy  String?
-  lockedAt  DateTime?
+  version  Int       @default(1)
+  lockedBy String?
+  lockedAt DateTime?
 
   isDeleted Boolean   @default(false)
   deletedAt DateTime?
@@ -246,6 +248,8 @@ model Transaction {
 
   @@index([contactId, createdAt, id])
   @@index([shopId, createdAt])
+  @@index([shopId, type, createdAt])
+  @@index([shopId, status, createdAt])
   @@index([shopId, isDeleted])
   @@index([contactId, isDeleted])
 }
@@ -259,8 +263,8 @@ model TransactionAudit {
   oldValue      Json?
   newValue      Json?
 
-  transaction     Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  changedByUser   User        @relation("TransactionAuditChangedBy", fields: [changedBy], references: [id])
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  changedByUser User        @relation("TransactionAuditChangedBy", fields: [changedBy], references: [id])
 
   @@index([transactionId, changedAt])
 }
@@ -297,7 +301,7 @@ model Attachment {
   uploadedBy String
   createdAt  DateTime             @default(now())
 
-  uploadedByUser User    @relation("AttachmentUploadedBy", fields: [uploadedBy], references: [id])
+  uploadedByUser User @relation("AttachmentUploadedBy", fields: [uploadedBy], references: [id])
 
   transactionId     String?
   transaction       Transaction?     @relation(fields: [transactionId], references: [id], onDelete: Cascade)
@@ -372,15 +376,15 @@ enum SalaryStatus {
 }
 
 model Worker {
-  id             String   @id @default(cuid())
-  shopId         String
-  name           String
-  designation    String?
-  payType        PayType
-  monthlySalary  Decimal? @db.Decimal(14, 2)
-  dailyWageRate  Decimal? @db.Decimal(14, 2)
-  joiningDate    DateTime
-  active         Boolean  @default(true)
+  id            String   @id @default(cuid())
+  shopId        String
+  name          String
+  designation   String?
+  payType       PayType
+  monthlySalary Decimal? @db.Decimal(14, 2)
+  dailyWageRate Decimal? @db.Decimal(14, 2)
+  joiningDate   DateTime
+  active        Boolean  @default(true)
 
   isDeleted Boolean   @default(false)
   deletedAt DateTime?
@@ -389,16 +393,17 @@ model Worker {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  shop            Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  deletedByUser   User?           @relation("WorkerDeletedBy", fields: [deletedBy], references: [id])
-  attendanceLogs  Attendance[]
-  salaryPayments  SalaryPayment[]
+  shop           Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  deletedByUser  User?           @relation("WorkerDeletedBy", fields: [deletedBy], references: [id])
+  attendanceLogs Attendance[]
+  salaryPayments SalaryPayment[]
 
-  createdBy       String?
-  createdByUser   User?           @relation("WorkerCreatedBy", fields: [createdBy], references: [id])
+  createdBy     String?
+  createdByUser User?   @relation("WorkerCreatedBy", fields: [createdBy], references: [id])
 
   @@index([shopId])
   @@index([shopId, isDeleted])
+  @@index([shopId, name])
 }
 
 model Attendance {
@@ -434,9 +439,9 @@ model SalaryPayment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  worker      Worker        @relation(fields: [workerId], references: [id], onDelete: Cascade)
-  paidByUser  User?         @relation("SalaryPaymentPaidBy", fields: [paidBy], references: [id])
-  audits      SalaryAudit[]
+  worker     Worker        @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  paidByUser User?         @relation("SalaryPaymentPaidBy", fields: [paidBy], references: [id])
+  audits     SalaryAudit[]
 
   @@index([workerId, periodStart])
 }
@@ -450,8 +455,8 @@ model SalaryAudit {
   oldValue        Json?
   newValue        Json?
 
-  salaryPayment  SalaryPayment @relation(fields: [salaryPaymentId], references: [id], onDelete: Cascade)
-  changedByUser  User          @relation("SalaryAuditChangedBy", fields: [changedBy], references: [id])
+  salaryPayment SalaryPayment @relation(fields: [salaryPaymentId], references: [id], onDelete: Cascade)
+  changedByUser User          @relation("SalaryAuditChangedBy", fields: [changedBy], references: [id])
 
   @@index([salaryPaymentId, changedAt])
 }
@@ -480,18 +485,18 @@ enum LossReason {
 }
 
 model Product {
-  id            String   @id @default(cuid())
+  id            String  @id @default(cuid())
   shopId        String
   name          String
   sku           String?
   category      String?
   unit          String
-  purchasePrice Decimal  @db.Decimal(14, 2)
-  sellingPrice  Decimal  @db.Decimal(14, 2)
+  purchasePrice Decimal @db.Decimal(14, 2)
+  sellingPrice  Decimal @db.Decimal(14, 2)
   reorderLevel  Int?
 
-  currentStock  Decimal  @default(0) @db.Decimal(14, 2)
-  expiryDate    DateTime? @db.Date
+  currentStock Decimal   @default(0) @db.Decimal(14, 2)
+  expiryDate   DateTime? @db.Date
 
   isDeleted Boolean   @default(false)
   deletedAt DateTime?
@@ -507,11 +512,14 @@ model Product {
   losses        Loss[]
 
   createdBy     String?
-  createdByUser User?          @relation("ProductCreatedBy", fields: [createdBy], references: [id])
+  createdByUser User?   @relation("ProductCreatedBy", fields: [createdBy], references: [id])
 
   @@index([shopId])
   @@index([shopId, isDeleted])
-  @@index([sku])
+  @@index([shopId, isDeleted, createdAt(sort: Desc)])
+  @@index([shopId, name])
+  @@index([shopId, sku])
+  @@index([shopId, category])
 }
 
 model ProductBatch {
@@ -534,15 +542,15 @@ model ProductBatch {
 }
 
 model StockEntry {
-  id           String            @id @default(cuid())
+  id           String         @id @default(cuid())
   productId    String
   batchId      String?
   type         StockEntryType
-  quantity     Decimal           @db.Decimal(14, 2)
-  pricePerUnit Decimal?          @db.Decimal(14, 2)
+  quantity     Decimal        @db.Decimal(14, 2)
+  pricePerUnit Decimal?       @db.Decimal(14, 2)
   note         String?
 
-  status     StockEntryStatus  @default(PENDING)
+  status     StockEntryStatus @default(PENDING)
   reviewedBy String?
   reviewedAt DateTime?
   reviewNote String?
@@ -558,6 +566,7 @@ model StockEntry {
 
   @@index([productId, createdAt])
   @@index([status])
+  @@index([batchId])
 }
 
 model Loss {
@@ -626,10 +635,10 @@ model PaperImportPage {
   reviewedBy         String?
   reviewedAt         DateTime?
 
-  batch             PaperImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
-  resultingContact  Contact?         @relation(fields: [resultingContactId], references: [id])
-  reviewedByUser    User?            @relation("PaperImportPageReviewedBy", fields: [reviewedBy], references: [id])
-  attachments       Attachment[]
+  batch            PaperImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  resultingContact Contact?         @relation(fields: [resultingContactId], references: [id])
+  reviewedByUser   User?            @relation("PaperImportPageReviewedBy", fields: [reviewedBy], references: [id])
+  attachments      Attachment[]
 
   @@index([batchId, status])
 }
@@ -647,7 +656,7 @@ model PersonalNote {
   bgColor   String   @default("bg-blue-50")
   createdAt DateTime @default(now())
 
-  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
 
   @@index([shopId, createdAt])
 }
