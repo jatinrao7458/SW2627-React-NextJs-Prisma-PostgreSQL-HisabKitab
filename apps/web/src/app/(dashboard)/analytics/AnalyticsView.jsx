@@ -15,22 +15,31 @@ import {
 import { containerVariants, itemVariants } from "@/lib/animations";
 import styles from "./Transactions.module.css";
 import TransactionModal from "./TransactionModal";
-import { createTransaction, approveTransaction, rejectTransaction, editTransaction, deleteTransaction, approveDeletion, rejectDeletion } from "@/actions/analytics";
+import { getTransactions, createTransaction, approveTransaction, rejectTransaction, editTransaction, deleteTransaction, approveDeletion, rejectDeletion } from "@/actions/analytics";
 import { useSession } from "next-auth/react";
 import { Check, X, Trash2 } from "lucide-react";
+import useSWR from "swr";
 
-export default function AnalyticsView({ initialTransactions }) {
+export default function AnalyticsView({ range }) {
   const { data: session } = useSession();
   const isOwner = session?.user?.shopRole === "OWNER";
   
   const [filter, setFilter] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState("");
-  const [transactions, setTransactions] = useState(initialTransactions);
+
+  const { data: fetchedTransactions, mutate } = useSWR(
+    ['transactions', range],
+    ([_, r]) => getTransactions(r)
+  );
+
+  const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
-    setTransactions(initialTransactions);
-  }, [initialTransactions]);
+    if (fetchedTransactions) {
+      setTransactions(fetchedTransactions);
+    }
+  }, [fetchedTransactions]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);

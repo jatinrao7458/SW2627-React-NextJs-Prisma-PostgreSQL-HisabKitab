@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface HeroOverlayProps {
   /** Animation progress 0-1 */
@@ -10,6 +11,7 @@ interface HeroOverlayProps {
 }
 
 export default function HeroOverlay({ progress, animationComplete }: HeroOverlayProps) {
+  const router = useRouter();
   // Text appears when ink is dark enough for contrast (~55% progress)
   const show = progress > 0.55;
 
@@ -91,6 +93,7 @@ export default function HeroOverlay({ progress, animationComplete }: HeroOverlay
           }}
         >
           <button
+            onClick={() => router.push('/register')}
             className="pointer-events-auto"
             style={{
               fontFamily: 'var(--font-inter), system-ui, sans-serif',

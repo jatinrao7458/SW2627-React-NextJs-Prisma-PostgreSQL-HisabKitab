@@ -2,24 +2,33 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import useSWR from "swr";
 import { Plus, ArrowUpRight, ArrowDownLeft, FileText } from "lucide-react";
 import { containerVariants, itemVariants } from "@/lib/animations";
 import styles from "./Ledger.module.css";
 import PartyLedgerModal from "./PartyLedgerModal";
 import AddPartyModal from "./AddPartyModal";
 import AdjustBalanceModal from "./AdjustBalanceModal";
-import { createContact, deleteContact, adjustContactBalance } from "@/actions/ledger";
+import { createContact, deleteContact, adjustContactBalance, getContacts } from "@/actions/ledger";
 
-export default function LedgerView({ initialContacts }) {
-  const [activeTab, setActiveTab] = useState("COLLECT"); // COLLECT or GIVE
+export default function LedgerView({ range }) {
+  const [activeTab, setActiveTab] = useState("COLLECT");
   const [activeParty, setActiveParty] = useState(null);
   const [isAddPartyModalOpen, setIsAddPartyModalOpen] = useState(false);
-  const [parties, setParties] = useState(initialContacts);
   const [adjustModalData, setAdjustModalData] = useState(null);
 
+  const { data: contacts, mutate } = useSWR(
+    ['contacts', range],
+    ([_, r]) => getContacts(r)
+  );
+
+  const [parties, setParties] = useState([]);
+
   useEffect(() => {
-    setParties(initialContacts);
-  }, [initialContacts]);
+    if (contacts) {
+      setParties(contacts);
+    }
+  }, [contacts]);
 
   const handleAddParty = async (newParty) => {
     // Add fake ID so optimistic UI can render

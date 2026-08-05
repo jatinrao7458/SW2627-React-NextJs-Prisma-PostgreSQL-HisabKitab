@@ -1,18 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { UserPlus, MoreVertical, Briefcase, Calendar, CheckCircle2, Wallet, Clock } from "lucide-react";
 import { containerVariants, itemVariants } from "@/lib/animations";
 import styles from "./Workers.module.css";
 import AddWorkerModal from "./AddWorkerModal";
-import { createWorker } from "@/actions/workers";
+import { createWorker, getWorkers } from "@/actions/workers";
+import useSWR from "swr";
 
 const colors = ["#10B981", "#3B82F6", "#F59E0B", "#8B5CF6", "#EC4899", "#14B8A6"];
 
-export default function WorkersView({ initialWorkers }) {
-  const [workers, setWorkers] = useState(initialWorkers);
+export default function WorkersView() {
+  const { data: fetchedWorkers, mutate } = useSWR(
+    'workers',
+    () => getWorkers()
+  );
+
+  const [workers, setWorkers] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (fetchedWorkers) {
+      setWorkers(fetchedWorkers);
+    }
+  }, [fetchedWorkers]);
 
   const handleAddWorker = async (newWorker) => {
     // Optimistic Update
