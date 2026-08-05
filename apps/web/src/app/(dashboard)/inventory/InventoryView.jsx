@@ -6,10 +6,16 @@ import { Plus, MoreVertical, Package, AlertTriangle, TrendingUp, RefreshCcw, Sea
 import { containerVariants, itemVariants } from "@/lib/animations";
 import styles from "./Inventory.module.css";
 import AddInventoryModal from "./AddInventoryModal";
-import { createProduct } from "@/actions/inventory";
+import { createProduct, getProducts } from "@/actions/inventory";
+import useSWR from "swr";
 
-export default function InventoryView({ initialInventory }) {
-  const [inventory, setInventory] = useState(initialInventory);
+export default function InventoryView() {
+  const { data: fetchedInventory, mutate } = useSWR(
+    'inventory',
+    () => getProducts()
+  );
+
+  const [inventory, setInventory] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,8 +23,10 @@ export default function InventoryView({ initialInventory }) {
   const [expiryDateFilter, setExpiryDateFilter] = useState("");
 
   useEffect(() => {
-    setInventory(initialInventory);
-  }, [initialInventory]);
+    if (fetchedInventory) {
+      setInventory(fetchedInventory);
+    }
+  }, [fetchedInventory]);
 
   const filteredInventory = inventory.filter(product => {
     if (categoryFilter !== "ALL" && product.category !== categoryFilter) return false;

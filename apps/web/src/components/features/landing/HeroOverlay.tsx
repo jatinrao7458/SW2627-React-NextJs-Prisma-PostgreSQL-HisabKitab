@@ -93,7 +93,7 @@ export default function HeroOverlay({ progress, animationComplete }: HeroOverlay
           }}
         >
           <button
-            onClick={() => router.push('/login')}
+            onClick={() => router.push('/register')}
             className="pointer-events-auto"
             style={{
               fontFamily: 'var(--font-inter), system-ui, sans-serif',
