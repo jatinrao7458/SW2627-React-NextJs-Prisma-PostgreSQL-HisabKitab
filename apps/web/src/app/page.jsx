@@ -80,23 +80,35 @@ export default function VivaPage() {
       addLog(`Callback result: ${data}`);
     });
 
-    // Promise approach
-    const simulatePromise = () => {
+    // Promise approach with Chaining
+    const simulatePromise = (value) => {
       return new Promise((resolve) => {
         setTimeout(() => {
-          resolve("Promise result data");
+          resolve(value ? `Promise result data: ${value}` : "Promise result data");
         }, 1000);
       });
     };
 
-    simulatePromise().then((data) => {
-      addLog(`Promise .then() result: ${data}`);
-    });
+    simulatePromise("Step 1")
+      .then((data) => {
+        addLog(`Promise .then() result: ${data}`);
+        return simulatePromise("Step 2"); // Chaining a new Promise
+      })
+      .then((data) => {
+        addLog(`Promise .then() chained result: ${data}`);
+        return "Immediate sync value"; // Chaining a synchronous value
+      })
+      .then((data) => {
+        addLog(`Promise .then() final result: ${data}`);
+      })
+      .catch((error) => {
+        addLog(`Promise .catch() error: ${error}`);
+      });
 
     // Async/Await approach
     addLog("Waiting for async/await result...");
     try {
-      const asyncData = await simulatePromise();
+      const asyncData = await simulatePromise("Async Step");
       addLog(`Async/Await result: ${asyncData}`);
       addLog("Notice how async/await makes asynchronous code look synchronous and easier to read!");
     } catch (error) {
