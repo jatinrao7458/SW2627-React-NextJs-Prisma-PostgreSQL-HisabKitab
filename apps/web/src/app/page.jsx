@@ -10,7 +10,7 @@ export default function VivaPage() {
     setLogs((prev) => [...prev, msg]);
   };
 
-  // 1. Hoisting Example
+  // 1. JavaScript — Hoisting Example
   // In JS, function declarations and var declarations are hoisted.
   const demonstrateHoisting = () => {
     addLog("--- Demonstrating Hoisting ---");
@@ -48,7 +48,7 @@ export default function VivaPage() {
     addLog("The inner function remembers the 'count' variable even after makeCounter finished execution. That's a closure!");
   };
 
-  // 3. Event Loop Example
+  // 3. JavaScript — Event loop Example
   // JS is single-threaded. The Event Loop manages the execution of code, collecting and processing events.
   const demonstrateEventLoop = () => {
     addLog("--- Demonstrating Event Loop ---");
