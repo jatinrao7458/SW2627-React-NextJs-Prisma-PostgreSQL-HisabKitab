@@ -12,6 +12,11 @@ datasource db {
 // 1. AUTH — NextAuth.js adapter tables + User
 // ============================================================================
 
+// SQL JOINs demonstration for Postgres:
+// The User model below has multiple one-to-many relationships (e.g., accounts, sessions, shopMembers).
+// When fetching a User along with their accounts in Prisma (e.g. prisma.user.findUnique({ include: { accounts: true } })),
+// Prisma translates this into a SQL JOIN (such as a LEFT JOIN or INNER JOIN depending on the query) 
+// to combine the rows from the User table with matching rows in the Account table based on the related column (userId).
 model User {
   id            String    @id @default(cuid())
   name          String?
