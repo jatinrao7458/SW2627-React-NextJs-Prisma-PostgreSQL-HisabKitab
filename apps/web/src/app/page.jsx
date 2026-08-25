@@ -95,7 +95,7 @@ export default function VivaPage() {
         return simulatePromise("Step 2"); // Chaining a new Promise
       })
       .then((data) => {
-        addLog(`Promise .then() chained result: ${data}`);
+        addLog(`Promise .then() chained result: ${data}`);0
         return "Immediate sync value"; // Chaining a synchronous value
       })
       .then((data) => {
@@ -116,6 +116,44 @@ export default function VivaPage() {
     }
   };
 
+  // 6. Client-side routing (Frontend)
+  const demonstrateRouting = () => {
+    addLog("--- Demonstrating Client-Side Routing ---");
+    addLog("In Next.js, client-side routing is handled by the <Link> component or useRouter hook.");
+    addLog("Unlike traditional <a> tags that trigger a full page reload from the server, client-side routing intercepts the click.");
+    addLog("It fetches only the necessary data/components and updates the DOM dynamically, resulting in instant SPA-like transitions.");
+  };
+
+  // 7. Schema modeling (Mongo / NoSQL)
+  const demonstrateMongoSchema = () => {
+    addLog("--- Demonstrating Schema Modeling (Mongo) ---");
+    addLog("MongoDB uses JSON-like BSON documents. Mongoose is often used to define schemas:");
+    addLog(`const UserSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  // Embedded Document Pattern (Denormalization)
+  profile: { age: Number, city: String },
+  // Reference Pattern (Normalization)
+  postIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }]
+});`);
+    addLog("You must decide between Embedding (for data read together) vs Referencing (for large, unbounded data).");
+  };
+
+  // 8. SQL JOINs (Postgres / SQL)
+  const demonstrateSqlJoins = () => {
+    addLog("--- Demonstrating SQL JOINs (Postgres) ---");
+    addLog("SQL JOINs combine rows from two or more tables based on a related column.");
+    addLog(`-- Raw SQL Example:
+SELECT users.name, invoices.total
+FROM users
+INNER JOIN invoices ON users.id = invoices.user_id;`);
+    addLog(`// Prisma ORM equivalent (uses JOINs under the hood):
+await prisma.user.findMany({
+  include: {
+    invoices: true
+  }
+});`);
+  };
+
   return (
     <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto", fontFamily: "sans-serif" }}>
       <h1 style={{ fontSize: "2rem", marginBottom: "1rem", color: "#333", fontWeight: "bold" }}>JavaScript Viva Concepts Demo</h1>
@@ -129,6 +167,9 @@ export default function VivaPage() {
         <button onClick={demonstrateClosure} style={btnStyle}>2. Closures</button>
         <button onClick={demonstrateEventLoop} style={btnStyle}>3. Event Loop</button>
         <button onClick={demonstratePromisesAndAsync} style={btnStyle}>4 & 5. Promises & Async/Await</button>
+        <button onClick={demonstrateRouting} style={btnStyle}>6. Client-Side Routing</button>
+        <button onClick={demonstrateMongoSchema} style={btnStyle}>7. Mongo Schema</button>
+        <button onClick={demonstrateSqlJoins} style={btnStyle}>8. SQL JOINs</button>
         <button onClick={() => setLogs([])} style={{ ...btnStyle, backgroundColor: "#ef4444" }}>Clear Logs</button>
       </div>
 
