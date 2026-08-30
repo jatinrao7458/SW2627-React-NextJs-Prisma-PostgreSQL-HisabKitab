@@ -140,18 +140,51 @@ export default function VivaPage() {
 
   // 8. SQL JOINs (Postgres / SQL)
   const demonstrateSqlJoins = () => {
-    addLog("--- Demonstrating SQL JOINs (Postgres) ---");
+    addLog("--- Demonstrating SQL JOINs (Implementation in JS) ---");
     addLog("SQL JOINs combine rows from two or more tables based on a related column.");
-    addLog(`-- Raw SQL Example:
-SELECT users.name, invoices.total
-FROM users
-INNER JOIN invoices ON users.id = invoices.user_id;`);
-    addLog(`// Prisma ORM equivalent (uses JOINs under the hood):
-await prisma.user.findMany({
-  include: {
-    invoices: true
-  }
-});`);
+    
+    const users = [
+      { id: 1, name: "Alice" },
+      { id: 2, name: "Bob" },
+      { id: 3, name: "Charlie" }
+    ];
+    
+    const invoices = [
+      { id: 101, user_id: 1, total: 250 },
+      { id: 102, user_id: 1, total: 400 },
+      { id: 103, user_id: 2, total: 150 }
+    ];
+
+    addLog("Users: " + JSON.stringify(users));
+    addLog("Invoices: " + JSON.stringify(invoices));
+
+    addLog("--- Executing INNER JOIN logic ---");
+    const innerJoinResult = users.reduce((acc, user) => {
+      const userInvoices = invoices.filter(inv => inv.user_id === user.id);
+      userInvoices.forEach(inv => {
+        acc.push({ name: user.name, invoice_total: inv.total });
+      });
+      return acc;
+    }, []);
+    
+    addLog(`INNER JOIN Result: ${JSON.stringify(innerJoinResult)}`);
+    addLog("Notice Charlie is excluded because he has no invoices (INNER JOIN).");
+    
+    addLog("--- Executing LEFT JOIN logic ---");
+    const leftJoinResult = users.reduce((acc, user) => {
+      const userInvoices = invoices.filter(inv => inv.user_id === user.id);
+      if (userInvoices.length > 0) {
+        userInvoices.forEach(inv => {
+          acc.push({ name: user.name, invoice_total: inv.total });
+        });
+      } else {
+        acc.push({ name: user.name, invoice_total: null });
+      }
+      return acc;
+    }, []);
+
+    addLog(`LEFT JOIN Result: ${JSON.stringify(leftJoinResult)}`);
+    addLog("Notice Charlie is included with null invoice_total (LEFT JOIN).");
   };
 
   return (
