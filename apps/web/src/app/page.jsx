@@ -138,6 +138,31 @@ export default function VivaPage() {
     addLog("You must decide between Embedding (for data read together) vs Referencing (for large, unbounded data).");
   };
 
+  // Helper to render tables in the log
+  const renderTable = (title, columns, data) => (
+    <div style={{ margin: "1rem 0", backgroundColor: "#2d2d2d", padding: "1rem", borderRadius: "8px" }}>
+      <h4 style={{ color: "#fff", marginBottom: "0.5rem" }}>{title}</h4>
+      <table style={{ width: "100%", borderCollapse: "collapse", color: "#e5e7eb", fontSize: "0.9rem" }}>
+        <thead>
+          <tr style={{ borderBottom: "1px solid #4ade80", textAlign: "left" }}>
+            {columns.map(col => <th key={col} style={{ padding: "0.5rem" }}>{col}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row, i) => (
+            <tr key={i} style={{ borderBottom: "1px solid #444" }}>
+              {columns.map(col => (
+                <td key={col} style={{ padding: "0.5rem" }}>
+                  {row[col] === null ? <span style={{ color: "#f87171" }}>NULL</span> : String(row[col])}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
   // 8. SQL JOINs (Postgres / SQL)
   const demonstrateSqlJoins = () => {
     addLog("--- Demonstrating SQL JOINs (Implementation in JS) ---");
@@ -155,8 +180,8 @@ export default function VivaPage() {
       { id: 103, user_id: 2, total: 150 }
     ];
 
-    addLog("Users: " + JSON.stringify(users));
-    addLog("Invoices: " + JSON.stringify(invoices));
+    addLog(renderTable("Users Table", ["id", "name"], users));
+    addLog(renderTable("Invoices Table", ["id", "user_id", "total"], invoices));
 
     addLog("--- Executing INNER JOIN logic ---");
     const innerJoinResult = users.reduce((acc, user) => {
@@ -167,7 +192,7 @@ export default function VivaPage() {
       return acc;
     }, []);
     
-    addLog(`INNER JOIN Result: ${JSON.stringify(innerJoinResult)}`);
+    addLog(renderTable("INNER JOIN Result", ["name", "invoice_total"], innerJoinResult));
     addLog("Notice Charlie is excluded because he has no invoices (INNER JOIN).");
     
     addLog("--- Executing LEFT JOIN logic ---");
@@ -183,8 +208,8 @@ export default function VivaPage() {
       return acc;
     }, []);
 
-    addLog(`LEFT JOIN Result: ${JSON.stringify(leftJoinResult)}`);
-    addLog("Notice Charlie is included with null invoice_total (LEFT JOIN).");
+    addLog(renderTable("LEFT JOIN Result", ["name", "invoice_total"], leftJoinResult));
+    addLog("Notice Charlie is included with NULL invoice_total (LEFT JOIN).");
   };
 
   return (
@@ -218,7 +243,7 @@ export default function VivaPage() {
               animate={{ opacity: 1, x: 0 }}
               style={{ marginBottom: "0.5rem" }}
             >
-              {`> ${log}`}
+              {typeof log === 'string' ? `> ${log}` : log}
             </motion.div>
           ))
         )}
