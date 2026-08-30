@@ -242,9 +242,9 @@ npm run dev
 
 | Member | Role | Technical Strength |
 |---|---|---|
-| **Jatin Yadav** | Project Admin | React, MongoDB |
-| **Sameer Choudhary** | Contributor | React, MongoDB |
-| **Anant Sharma** | Contributor | React, MongoDB |
+| **Jatin Yadav** | Project Admin | React, PostgreSQL |
+| **Sameer Choudhary** | Contributor | React, PostgreSQL |
+| **Anant Sharma** | Contributor | React, PostgreSQL |
 
 ---
 
